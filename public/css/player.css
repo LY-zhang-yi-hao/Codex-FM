@@ -391,6 +391,36 @@
 }
 .queue-count:empty, .queue-count[data-count="0"] { display: none; }
 
+.queue-panel-header-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.queue-panel-clear {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.queue-panel-clear:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.16);
+}
+
+.queue-panel-clear:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* 播放列表面板内歌曲行 */
 .queue-item {
   display: flex;

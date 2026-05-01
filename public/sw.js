@@ -1,4 +1,4 @@
-const CACHE_NAME = 'claudio-fm-v9-background-studio';
+const CACHE_NAME = 'claudio-fm-v10-network-first-ui';
 const PRECACHE = [
   '/',
   '/css/main.css',
@@ -44,21 +44,28 @@ self.addEventListener('fetch', e => {
   // API 请求：直接走网络，不缓存
   if (url.pathname.startsWith('/api/')) return;
 
-  // HTML：优先网络，避免旧壳缓存导致界面不更新
-  if (e.request.mode === 'navigate') {
+  // HTML / CSS / JS：优先网络，避免旧界面资源被 SW 缓存卡住
+  const isUiAsset =
+    e.request.mode === 'navigate' ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js');
+
+  if (isUiAsset) {
     e.respondWith(
       fetch(e.request)
         .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put('/', clone));
+          if (res.ok && url.origin === self.location.origin) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          }
           return res;
         })
-        .catch(() => caches.match('/') || Response.error())
+        .catch(() => caches.match(e.request) || (e.request.mode === 'navigate' ? caches.match('/') : Response.error()))
     );
     return;
   }
 
-  // 静态资源：缓存优先，回退网络
+  // 其他静态资源：缓存优先，回退网络
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;

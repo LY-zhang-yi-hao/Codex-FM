@@ -208,6 +208,7 @@ body.has-custom-bg .cover-glow {
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
+  pointer-events: none;
 }
 
 .bg-studio-fab,
@@ -225,6 +226,7 @@ body.has-custom-bg .cover-glow {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+  pointer-events: auto;
 }
 
 .bg-studio-fab:hover,
@@ -266,7 +268,7 @@ body.has-custom-bg .cover-glow {
   position: fixed;
   right: 18px;
   top: 166px;
-  z-index: 1190;
+  z-index: 1210;
   display: flex;
   flex-direction: column;
   gap: 12px;

@@ -62,11 +62,21 @@ const queuePanel = $('queuePanel');
 const queueList = $('queueList');
 const queueCount = $('queueCount');
 const queuePanelCount = $('queuePanelCount');
+const queueClearBtn = $('queueClearBtn');
 
 function updateQueueCount() {
   const n = queue.length;
   queueCount.textContent = n;
   queueCount.dataset.count = n;
+  if (queueClearBtn) queueClearBtn.disabled = n === 0;
+}
+
+function clearQueue() {
+  queue = [];
+  queueIndex = 0;
+  updateQueueCount();
+  renderQueuePanel();
+  savePlaybackState();
 }
 
 function renderQueuePanel() {
@@ -123,6 +133,12 @@ queueBtn?.addEventListener('click', () => {
 
 queuePanel?.addEventListener('click', (e) => {
   if (e.target === queuePanel) queuePanel.style.display = 'none';
+});
+
+queueClearBtn?.addEventListener('click', () => {
+  if (queue.length === 0) return;
+  clearQueue();
+  window.showToast('播放列表已清空');
 });
 
 function formatTime(s) {

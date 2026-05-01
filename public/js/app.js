@@ -11,7 +11,7 @@ console.log('Claudio FM 启动中...');
 
 // 注册 Service Worker（PWA）
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=original-ui-v9-bg-studio').then((registration) => {
+  navigator.serviceWorker.register('/sw.js?v=original-ui-v10-network-first-ui').then((registration) => {
     registration.update().catch(() => {});
   }).catch(() => {});
 }
