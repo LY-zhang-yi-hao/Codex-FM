@@ -29,17 +29,23 @@ const progressFill = $('progressFill');
 const volumeSlider = $('volumeSlider');
 const volumeIcon = $('volumeIcon');
 
+function updateVolumeIcon() {
+  if (!volumeIcon) return;
+  const level = audio.volume === 0 ? 'muted' : audio.volume < 0.4 ? 'low' : 'high';
+  volumeIcon.dataset.level = level;
+}
+
 // 音量控制
 let savedVolume = parseFloat(localStorage.getItem('claudio_volume') ?? '0.8');
 audio.volume = savedVolume;
 if (volumeSlider) volumeSlider.value = savedVolume;
-volumeIcon.textContent = savedVolume === 0 ? '🔇' : savedVolume < 0.4 ? '🔉' : '🔊';
+updateVolumeIcon();
 
 volumeSlider?.addEventListener('input', () => {
   audio.volume = parseFloat(volumeSlider.value);
   savedVolume = audio.volume;
   localStorage.setItem('claudio_volume', savedVolume);
-  volumeIcon.textContent = audio.volume === 0 ? '🔇' : audio.volume < 0.4 ? '🔉' : '🔊';
+  updateVolumeIcon();
 });
 
 volumeIcon?.addEventListener('click', () => {
@@ -47,12 +53,11 @@ volumeIcon?.addEventListener('click', () => {
     savedVolume = audio.volume;
     audio.volume = 0;
     volumeSlider.value = 0;
-    volumeIcon.textContent = '🔇';
   } else {
     audio.volume = savedVolume || 0.8;
     volumeSlider.value = audio.volume;
-    volumeIcon.textContent = audio.volume < 0.4 ? '🔉' : '🔊';
   }
+  updateVolumeIcon();
   localStorage.setItem('claudio_volume', audio.volume);
 });
 
@@ -147,7 +152,8 @@ function formatTime(s) {
 }
 
 function updatePlayButton() {
-  playBtn.textContent = audio.paused ? '▶' : '⏸';
+  const icon = playBtn.querySelector('.play-icon-img');
+  if (icon) icon.src = audio.paused ? '/ui-icons/pause.png' : '/ui-icons/play.png';
 }
 
 function updateProgress() {
@@ -162,8 +168,9 @@ async function checkLiked() {
   if (!currentSong) return;
   const favs = await server.get('/api/favorites');
   isLiked = favs.some(f => f.song_id === currentSong.id);
-  likeBtn.textContent = isLiked ? '♥' : '♡';
   likeBtn.classList.toggle('liked', isLiked);
+  const likeIcon = likeBtn.querySelector('.like-icon-img');
+  if (likeIcon) likeIcon.src = isLiked ? '/ui-icons/liked.png' : '/ui-icons/like.png';
   if (miniLikeBtn) miniLikeBtn.textContent = isLiked ? '♥' : '♡';
 }
 
@@ -217,7 +224,7 @@ export async function playSong(song) {
   updatePlayButton();
   checkLiked();
   syncMiniPlayer();
-  setPlayerCollapsed(true);
+  setPlayerCollapsed(false);
 
   // 记录播放历史
   server.post('/api/history', {
@@ -272,6 +279,10 @@ function togglePlay() {
     playSong(queue[0]);
     return;
   }
+  if (currentSong && !audio.src) {
+    playSong(currentSong);
+    return;
+  }
   if (audio.paused) audio.play().catch(() => {});
   else audio.pause();
   updatePlayButton();
@@ -294,7 +305,6 @@ function toggleShuffle() {
 }
 
 function updateRepeatIcon() {
-  repeatBtn.innerHTML = playMode === 'one' ? '↻<sup style="font-size:10px;margin-left:-2px">1</sup>' : '↻';
   repeatBtn.classList.toggle('active', playMode !== 'off');
 }
 
@@ -416,6 +426,8 @@ window.addEventListener('voiceEnd', () => {
 
 // ========== 播放器展开/收起 ==========
 const playerSection = $('playerSection');
+const app = $('app');
+const chatSection = $('chatSection');
 const miniPlayer = $('miniPlayer');
 const miniPlayBtn = $('miniPlayBtn');
 const miniNextBtn = $('miniNextBtn');
@@ -424,18 +436,39 @@ const miniCover = $('miniCover');
 const miniTitle = $('miniTitle');
 const miniProgressFill = $('miniProgressFill');
 const playerToggle = $('playerToggle');
+const playerBackBtn = $('playerBackBtn');
+const PLAYER_VIEW_TRANSITION_MS = 800;
 
 let playerCollapsed = false;
+let chatHideTimer = null;
 
 function setPlayerCollapsed(collapsed) {
+  clearTimeout(chatHideTimer);
   playerCollapsed = collapsed;
   playerSection.classList.toggle('collapsed', collapsed);
   miniPlayer.classList.toggle('show', collapsed);
   playerToggle?.classList.toggle('flipped', !collapsed);
+  app?.classList.toggle('player-only', !collapsed);
+
+  if (!collapsed) {
+    chatSection?.classList.add('is-hidden');
+  } else {
+    chatSection?.classList.remove('is-hidden');
+    chatHideTimer = setTimeout(() => {
+      if (playerCollapsed) return;
+      chatSection?.classList.add('is-hidden');
+    }, PLAYER_VIEW_TRANSITION_MS);
+  }
+
   if (playerToggle) playerToggle.title = collapsed ? '展开播放器' : '收起播放器';
 }
 
+export function showPlayerView() {
+  setPlayerCollapsed(false);
+}
+
 playerToggle?.addEventListener('click', () => setPlayerCollapsed(!playerCollapsed));
+playerBackBtn?.addEventListener('click', () => setPlayerCollapsed(true));
 miniPlayer?.addEventListener('click', (e) => {
   if (e.target.closest('.mini-ctrl')) return;
   setPlayerCollapsed(false);

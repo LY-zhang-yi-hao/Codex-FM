@@ -111,7 +111,7 @@
     </button>
   </div>
 
-  <div id="app">
+  <div id="app" class="player-only">
     <!-- 顶部栏 -->
     <div class="topbar">
       <button class="topbar-btn" id="themeToggle" title="切换主题">
@@ -147,6 +147,17 @@
 
     <!-- 播放器区域（展开覆盖层） -->
     <div class="player-section" id="playerSection">
+      <button class="player-back-btn" id="playerBackBtn" title="返回对话" aria-label="返回对话">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 15a2 2 0 0 1-2 2H8l-4 3v-3H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"></path>
+          <path d="M8.5 10.5h7"></path>
+          <path d="M8.5 13.5h4.5"></path>
+        </svg>
+      </button>
+      <div class="player-mood-bubble" id="playerMoodBubble" aria-live="polite">
+        <div class="player-mood-chip" id="playerMoodChip">当前电台情绪</div>
+        <div class="player-mood-text" id="playerMoodText">这里会显示当前电台的情绪和推荐氛围。</div>
+      </div>
       <div class="cover-container" id="coverContainer">
         <div class="cover-flipper" id="coverFlipper">
           <div class="cover-front">
@@ -164,7 +175,9 @@
       <div class="player-controls">
         <div class="player-info">
           <div class="song-title" id="songTitle">未在播放</div>
-          <button class="like-btn" id="likeBtn" title="收藏">♡</button>
+          <button class="like-btn" id="likeBtn" title="收藏" aria-label="收藏">
+            <img class="icon-img like-icon-img" src="/ui-icons/like.png" alt="">
+          </button>
         </div>
         <div class="progress-bar">
           <span class="progress-time" id="currentTime">0:00</span>
@@ -174,14 +187,24 @@
           <span class="progress-time" id="totalTime">0:00</span>
         </div>
         <div class="control-buttons">
-          <button class="ctrl-btn" id="shuffleBtn" title="随机">⇆</button>
-          <button class="ctrl-btn" id="prevBtn" title="上一曲">⏮</button>
-          <button class="ctrl-btn play-btn" id="playBtn" title="播放">▶</button>
-          <button class="ctrl-btn" id="nextBtn" title="下一曲">⏭</button>
-          <button class="ctrl-btn" id="repeatBtn" title="循环">↻</button>
+          <button class="ctrl-btn" id="shuffleBtn" title="随机" aria-label="随机">
+            <img class="icon-img" src="/ui-icons/shuffle.png" alt="">
+          </button>
+          <button class="ctrl-btn" id="prevBtn" title="上一曲" aria-label="上一曲">
+            <img class="icon-img" src="/ui-icons/prev.png" alt="">
+          </button>
+          <button class="ctrl-btn play-btn" id="playBtn" title="播放" aria-label="播放">
+            <img class="icon-img play-icon-img" src="/ui-icons/pause.png" alt="">
+          </button>
+          <button class="ctrl-btn" id="nextBtn" title="下一曲" aria-label="下一曲">
+            <img class="icon-img" src="/ui-icons/next.png" alt="">
+          </button>
+          <button class="ctrl-btn" id="repeatBtn" title="循环" aria-label="循环">
+            <img class="icon-img" src="/ui-icons/repeat.png" alt="">
+          </button>
         </div>
         <div class="volume-bar">
-          <span class="volume-icon" id="volumeIcon">🔊</span>
+          <span class="volume-icon" id="volumeIcon"><img class="icon-img volume-icon-img" src="/ui-icons/volume.png" alt=""></span>
           <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.8">
           <button class="queue-btn" id="queueBtn" title="播放列表">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -192,13 +215,19 @@
     </div>
 
     <!-- 聊天区域 -->
-    <div class="chat-section">
+    <div class="chat-section is-hidden" id="chatSection">
       <div class="chat-header">
-        <button class="chat-header-btn" id="djAvatar" title="电台信息">电台</button>
+        <button class="chat-header-btn avatar-btn" id="djAvatar" title="电台信息" aria-label="电台信息">
+          <img class="chat-header-avatar-img is-hidden" id="djAvatarImg" alt="DJ 头像">
+          <span class="chat-header-avatar-label" id="djAvatarLabel">电台</span>
+        </button>
         <button class="player-toggle" id="playerToggle" title="展开播放器">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
         </button>
-        <button class="chat-header-btn" id="userAvatar" title="我的信息">我的</button>
+        <button class="chat-header-btn avatar-btn" id="userAvatar" title="我的信息" aria-label="我的信息">
+          <img class="chat-header-avatar-img is-hidden" id="userAvatarImg" alt="我的头像">
+          <span class="chat-header-avatar-label" id="userAvatarLabel">我的</span>
+        </button>
       </div>
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-input-area">
@@ -216,6 +245,21 @@
         <button class="panel-close" onclick="document.getElementById('djPanel').style.display='none'">✕</button>
       </div>
       <div class="panel-body">
+        <div class="panel-section avatar-entry-section">
+          <div class="panel-avatar-entry">
+            <div class="panel-avatar-entry-main">
+              <div class="panel-avatar-entry-preview" id="panelDjAvatarPreview">电台</div>
+              <div class="panel-avatar-entry-copy">
+                <h4>DJ 头像</h4>
+                <p>这里直接更换电台头像，不用再进电台配置。</p>
+              </div>
+            </div>
+            <div class="panel-avatar-entry-actions">
+              <button class="playlist-panel-action primary" id="panelDjAvatarChangeBtn" type="button">更换头像</button>
+              <button class="playlist-panel-action" id="panelDjAvatarClearBtn" type="button">恢复默认</button>
+            </div>
+          </div>
+        </div>
         <div class="panel-section">
           <h4>电台简介</h4>
           <p id="stationInfo" style="color:var(--text-secondary);font-size:14px;line-height:1.6">
@@ -240,12 +284,27 @@
         <button class="panel-close" onclick="document.getElementById('userPanel').style.display='none'">✕</button>
       </div>
       <div class="panel-body">
+        <div class="panel-section avatar-entry-section">
+          <div class="panel-avatar-entry">
+            <div class="panel-avatar-entry-main">
+              <div class="panel-avatar-entry-preview" id="panelUserAvatarPreview">我的</div>
+              <div class="panel-avatar-entry-copy">
+                <h4>我的头像</h4>
+                <p>这里直接更换聊天头像，上传后可继续裁切。</p>
+              </div>
+            </div>
+            <div class="panel-avatar-entry-actions">
+              <button class="playlist-panel-action primary" id="panelUserAvatarChangeBtn" type="button">更换头像</button>
+              <button class="playlist-panel-action" id="panelUserAvatarClearBtn" type="button">恢复默认</button>
+            </div>
+          </div>
+        </div>
         <div class="panel-section">
           <h4>喜欢的歌曲</h4>
           <div id="favoritesList" style="font-size:14px">加载中...</div>
         </div>
         <div class="panel-section">
-          <h4>最近播放</h4>
+          <h4>历史歌曲记录 <span id="historySummary" style="color:var(--text-muted);font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;margin-left:6px;">默认 50 首</span></h4>
           <div id="historyList" style="font-size:14px">加载中...</div>
         </div>
       </div>
@@ -309,6 +368,22 @@
           <label class="config-label">网易云 MUSIC_U Cookie</label>
           <input class="config-input" id="cfgNeteaseCookie" type="password" placeholder="留空表示不修改">
         </div>
+        <div class="config-group">
+          <label class="config-label">DJ 自定义头像</label>
+          <div class="config-avatar-row">
+            <div class="config-avatar-preview" id="cfgDjAvatarPreview">电台</div>
+            <input class="config-avatar-input" id="cfgDjAvatarFile" type="file" accept="image/*">
+            <button class="config-avatar-clear" id="cfgDjAvatarClear" type="button">清除</button>
+          </div>
+        </div>
+        <div class="config-group">
+          <label class="config-label">我的自定义头像</label>
+          <div class="config-avatar-row">
+            <div class="config-avatar-preview" id="cfgUserAvatarPreview">我的</div>
+            <input class="config-avatar-input" id="cfgUserAvatarFile" type="file" accept="image/*">
+            <button class="config-avatar-clear" id="cfgUserAvatarClear" type="button">清除</button>
+          </div>
+        </div>
         <button class="config-save-btn" id="cfgSaveBtn">保存并重启</button>
       </div>
     </div>
@@ -328,9 +403,35 @@
     </div>
   </div>
 
+  <div class="panel-overlay avatar-crop-overlay" id="avatarCropPanel" style="display:none">
+    <div class="panel-content avatar-crop-content">
+      <div class="panel-header">
+        <h3>裁切头像</h3>
+        <button class="panel-close" id="avatarCropCancelBtn" type="button">✕</button>
+      </div>
+      <div class="panel-body avatar-crop-body">
+        <p class="avatar-crop-tip">拖动图片调整位置，使用滑块缩放，保存后会自动裁成正方形头像。</p>
+        <div class="avatar-crop-stage" id="avatarCropStage">
+          <img class="avatar-crop-image" id="avatarCropImage" alt="头像裁切预览">
+          <div class="avatar-crop-frame" aria-hidden="true"></div>
+        </div>
+        <label class="avatar-crop-slider-wrap" for="avatarCropZoom">
+          <span>缩放</span>
+          <input id="avatarCropZoom" class="avatar-crop-slider" type="range" min="1" max="3" step="0.01" value="1">
+        </label>
+        <div class="avatar-crop-actions">
+          <button class="config-avatar-clear" id="avatarCropResetBtn" type="button">重置</button>
+          <button class="playlist-panel-action primary" id="avatarCropApplyBtn" type="button">保存头像</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
   <input id="bgUploadInput" type="file" accept="image/*,video/*" hidden>
+  <input id="panelDjAvatarFile" type="file" accept="image/*" hidden>
+  <input id="panelUserAvatarFile" type="file" accept="image/*" hidden>
 
-  <script type="module" src="js/app.js?v=bgstudio-v2"></script>
+  <script type="module" src="js/app.js?v=player-init-fix-v1"></script>
 </body>
 </html>

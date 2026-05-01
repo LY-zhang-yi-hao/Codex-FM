@@ -107,17 +107,12 @@ function openUserPanel() {
 async function loadHistory() {
   try {
     const rows = await server.get('/api/history?limit=50');
-    // 按 song_id 去重，只保留最新一条
-    const seen = new Set();
-    const unique = rows.filter(r => {
-      if (seen.has(r.song_id)) return false;
-      seen.add(r.song_id);
-      return true;
-    });
+    const historySummary = document.getElementById('historySummary');
+    if (historySummary) historySummary.textContent = `默认 ${rows.length} 首`;
 
-    document.getElementById('historyList').innerHTML = unique.length === 0
+    document.getElementById('historyList').innerHTML = rows.length === 0
       ? '<p class="panel-empty">还没有播放记录</p>'
-      : unique.map(s => {
+      : rows.map(s => {
           const t = formatPlayedAt(s.played_at);
           return `
           <div class="panel-song">
@@ -142,6 +137,8 @@ async function loadHistory() {
       });
     });
   } catch (e) {
+    const historySummary = document.getElementById('historySummary');
+    if (historySummary) historySummary.textContent = '默认 50 首';
     document.getElementById('historyList').textContent = '加载失败';
   }
 }
@@ -160,6 +157,129 @@ let playlistList = [];
 let playlistSyncMeta = null;
 let activePlaylist = null;
 const playlistDetailCache = new Map();
+let openSwipeRow = null;
+
+function closeSwipeRow(row = openSwipeRow) {
+  if (!row) return;
+  row.classList.remove('swiped');
+  row.style.removeProperty('--swipe-offset');
+  if (openSwipeRow === row) openSwipeRow = null;
+}
+
+function attachPlaylistSwipeRow(item) {
+  const row = item.querySelector('.playlist-row');
+  const deleteBtn = item.querySelector('.playlist-swipe-delete');
+  if (!row || !deleteBtn) return;
+
+  let pointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let currentOffset = 0;
+  let dragging = false;
+  let lockSwipe = false;
+
+  const maxSwipe = 96;
+  const autoDeleteThreshold = maxSwipe / 2;
+
+  const deletePlaylist = async () => {
+    const playlistId = Number(item.dataset.playlistId);
+    const playlistName = row.querySelector('.panel-song-name')?.textContent?.trim() || '该歌单';
+    deleteBtn.disabled = true;
+    row.style.pointerEvents = 'none';
+    try {
+      await server.del(`/api/playlists/${playlistId}`);
+      playlistDetailCache.delete(playlistId);
+      if (activePlaylist && Number(activePlaylist.id) === playlistId) activePlaylist = null;
+      window.showToast(`已删除：${playlistName}`);
+      closeSwipeRow(row);
+      await renderPlaylistHome();
+    } catch (error) {
+      deleteBtn.disabled = false;
+      row.style.pointerEvents = '';
+      closeSwipeRow(row);
+      window.showToast('删除歌单失败');
+    }
+  };
+
+  const applyOffset = (offset) => {
+    row.style.setProperty('--swipe-offset', `${offset}px`);
+  };
+
+  row.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.playlist-row-play')) return;
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    dragging = false;
+    lockSwipe = false;
+    currentOffset = row.classList.contains('swiped') ? -maxSwipe : 0;
+    row.setPointerCapture(pointerId);
+
+    if (openSwipeRow && openSwipeRow !== row) closeSwipeRow(openSwipeRow);
+  });
+
+  row.addEventListener('pointermove', (event) => {
+    if (pointerId !== event.pointerId) return;
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+
+    if (!dragging) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dx) <= Math.abs(dy)) {
+        lockSwipe = true;
+        return;
+      }
+      dragging = true;
+      row.classList.add('dragging');
+    }
+
+    if (lockSwipe) return;
+    const offset = Math.max(-maxSwipe, Math.min(0, currentOffset + dx));
+    applyOffset(offset);
+  });
+
+  const endSwipe = (event) => {
+    if (pointerId !== event.pointerId) return;
+    if (row.hasPointerCapture(pointerId)) row.releasePointerCapture(pointerId);
+
+    const dx = event.clientX - startX;
+    row.classList.remove('dragging');
+
+    if (!lockSwipe && dragging) {
+      const finalOffset = Math.max(-maxSwipe, Math.min(0, currentOffset + dx));
+      if (finalOffset <= -maxSwipe) {
+        row.classList.add('swiped');
+        applyOffset(-maxSwipe);
+        openSwipeRow = row;
+      } else if (finalOffset <= -autoDeleteThreshold) {
+        row.classList.add('swiped');
+        applyOffset(-maxSwipe);
+        openSwipeRow = row;
+        deletePlaylist();
+      } else {
+        closeSwipeRow(row);
+      }
+    }
+
+    pointerId = null;
+    dragging = false;
+    lockSwipe = false;
+  };
+
+  row.addEventListener('pointerup', endSwipe);
+  row.addEventListener('pointercancel', endSwipe);
+
+  deleteBtn.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    deletePlaylist();
+  });
+}
+
+document.addEventListener('click', (event) => {
+  if (!openSwipeRow) return;
+  if (event.target.closest('.playlist-swipe-item')) return;
+  closeSwipeRow(openSwipeRow);
+});
 
 function openPlaylistPanel() {
   playlistPanel.style.display = 'flex';
@@ -200,26 +320,37 @@ async function renderPlaylistHome() {
     playlistPanelContent.innerHTML = `
       <div class="playlist-list">
         ${playlistList.map((playlist) => `
-          <div class="panel-song playlist-row" data-playlist-id="${playlist.id}">
-            ${playlist.cover_url && playlist.cover_url.startsWith('http')
-              ? `<img class="panel-song-cover playlist-row-cover" src="${playlist.cover_url}" alt="" onerror="this.style.display='none'">`
-              : '<div class="panel-song-cover playlist-row-cover" style="background:rgba(255,255,255,0.06)"></div>'}
-            <div class="panel-song-info">
-              <div class="panel-song-name">${cleanPlaylistName(playlist.name)}</div>
-              <div class="panel-song-artist">${playlist.song_count || 0} 首 · ${playlist.type === 'netease' ? '网易云同步' : '本地歌单'}</div>
-              ${playlistSyncMeta?.likedPlaylistId && cleanPlaylistName(playlist.name).includes('喜欢的音乐')
-                ? '<div class="playlist-row-badge">喜欢的音乐</div>'
-                : ''}
+          <div class="playlist-swipe-item" data-playlist-id="${playlist.id}">
+            <button class="playlist-swipe-delete" type="button" aria-label="删除歌单">删除</button>
+            <div class="panel-song playlist-row" data-playlist-id="${playlist.id}">
+              ${playlist.cover_url && playlist.cover_url.startsWith('http')
+                ? `<img class="panel-song-cover playlist-row-cover" src="${playlist.cover_url}" alt="" onerror="this.style.display='none'">`
+                : '<div class="panel-song-cover playlist-row-cover" style="background:rgba(255,255,255,0.06)"></div>'}
+              <div class="panel-song-info">
+                <div class="panel-song-name">${cleanPlaylistName(playlist.name)}</div>
+                <div class="panel-song-artist">${playlist.song_count || 0} 首 · ${playlist.type === 'netease' ? '网易云同步' : '本地歌单'}</div>
+                ${playlistSyncMeta?.likedPlaylistId && cleanPlaylistName(playlist.name).includes('喜欢的音乐')
+                  ? '<div class="playlist-row-badge">喜欢的音乐</div>'
+                  : ''}
+              </div>
+              <button class="panel-song-play playlist-row-play" data-playlist-id="${playlist.id}" title="播放整个歌单">▶</button>
+              <div class="playlist-open-hint">›</div>
             </div>
-            <button class="panel-song-play playlist-row-play" data-playlist-id="${playlist.id}" title="播放整个歌单">▶</button>
-            <div class="playlist-open-hint">›</div>
           </div>
         `).join('')}
       </div>
     `;
 
+    playlistPanelContent.querySelectorAll('.playlist-swipe-item').forEach((item) => {
+      attachPlaylistSwipeRow(item);
+    });
+
     playlistPanelContent.querySelectorAll('.playlist-row').forEach((row) => {
       row.addEventListener('click', (event) => {
+        if (row.classList.contains('swiped')) {
+          closeSwipeRow(row);
+          return;
+        }
         if (event.target.closest('.playlist-row-play')) return;
         const playlistId = Number(row.dataset.playlistId);
         openPlaylistDetail(playlistId);

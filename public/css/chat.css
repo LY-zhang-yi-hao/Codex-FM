@@ -1,4 +1,12 @@
 /*
+  chat.css —— 新手学习版详细注释
+  说明：
+  1. 我保留了原来的样式功能，只补充更适合初学者阅读的中文注释。
+  2. 我尽量做到“每个选择器讲清楚、每条关键属性讲用途”。
+  3. 如果你想学得更扎实，建议优先看选择器注释，再看每条属性注释。
+*/
+
+/*
   chat.css — 聊天面板样式文件（已添加详细中文注释）
   说明：
   - 本文件负责聊天区域的布局与样式，包括：聊天头、消息列表、消息气泡、歌曲卡片、语音消息以及输入区域等。
@@ -7,285 +15,635 @@
 */
 
 /* 聊天主体容器：占据可用剩余空间，使用列布局，顶部有分割线 */
+/* 下面开始给选择器 .chat-section 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-section {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1;
+  /* 设置元素允许的最小高度。 这里写成 0。 */
   min-height: 0; /* 与 flex 一起使用以正确计算内部滚动 */
+  /* 与 flex 一起使用以正确计算内部滚动 */
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 设置 flex 主轴方向，决定子元素是横排还是竖排。 这里写成 column。 */
   flex-direction: column;
+  /* 设置上边框。 这里写成 1px solid var(--border-subtle)。 */
   border-top: 1px solid var(--border-subtle); /* 顶部分割线，可调节为更明显或更柔和 */
+  /* 顶部分割线，可调节为更明显或更柔和 */
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.78s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.78s cubic-bezier(0.22, 1, 0.36, 1),
+    max-height 0.78s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.78s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.42s ease;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+.chat-section.is-hidden {
+  opacity: 0;
+  transform: translateY(22px);
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-top-color: transparent;
+}
+
+#app.player-only .player-section {
+  flex: 1;
+}
+
+#app.player-only .mini-player {
+  display: none !important;
 }
 
 /* 聊天头部：包含头像、标题与操作按钮，水平分布两端对齐 */
+/* 下面开始给选择器 .chat-header 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-header {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 控制 flex 主轴方向上的对齐方式。 这里写成 space-between。 */
   justify-content: space-between; /* 左右两端排列：头像/标题 vs 操作按钮 */
+  /* 左右两端排列：头像/标题 vs 操作按钮 */
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
   align-items: center;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 10px 20px。 */
   padding: 10px 20px; /* 内边距，可根据视觉密度调整 */
+  /* 内边距，可根据视觉密度调整 */
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0; /* 防止在收缩时变形 */
+  /* 防止在收缩时变形 */
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 头像：圆形、固定大小，通常用于打开用户信息或会话设置 */
+/* 下面开始给选择器 .chat-avatar 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-avatar {
+  /* 设置元素宽度。 这里写成 32px; height: 32px。 */
   width: 32px; height: 32px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
   overflow: hidden;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer; /* 表示可交互 */
+  /* 表示可交互 */
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid var(--border-subtle)。 */
   border: 1px solid var(--border-subtle);
+/* 这一行表示当前这组样式写完了。 */
 }
-.chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+/* 下面开始给选择器 .chat-avatar img 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.chat-avatar img {
+  /* 设置元素宽度。 这里写成 100%。 */
+  width: 100%;
+  /* 设置元素高度。 这里写成 100%。 */
+  height: 100%;
+  /* 设置图片或视频如何填充容器。 这里写成 cover。 */
+  object-fit: cover;
+}
 
 /* 头部按钮：外观中性，hover 时突出主色供视觉反馈；适合放置‘新建/设置’等小操作 */
+/* 下面开始给选择器 .chat-header-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-header-btn {
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid var(--border-subtle)。 */
   border: 1px solid var(--border-subtle);
+  /* 设置圆角，让元素边缘更柔和。 这里写成 12px。 */
   border-radius: 12px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.05)。 */
   background: rgba(255,255,255,0.05);
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
   color: var(--text-muted);
+  /* 设置字号大小。 这里写成 11px。 */
   font-size: 11px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 4px 10px。 */
   padding: 4px 10px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置属性变化时的过渡动画。 这里写成 color 0.15s, border-color 0.15s。 */
   transition: color 0.15s, border-color 0.15s;
+/* 这一行表示当前这组样式写完了。 */
 }
-.chat-header-btn:hover { color: var(--text-primary); border-color: var(--color-primary); }
+.avatar-btn {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.chat-header-avatar-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+.chat-header-avatar-label.is-hidden,
+.chat-header-avatar-img.is-hidden {
+  display: none;
+}
+/* 下面开始给选择器 .chat-header-btn:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.chat-header-btn:hover {
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
+  color: var(--text-primary);
+  /* 单独设置边框颜色。 这里写成 var(--color-primary)。 */
+  border-color: var(--color-primary);
+}
 
 /* 播放器切换按钮：圆形图标按钮，支持旋转动画（.flipped）用于状态切换 */
+/* 下面开始给选择器 .player-toggle 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .player-toggle {
+  /* 设置元素宽度。 这里写成 32px; height: 32px。 */
   width: 32px; height: 32px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid var(--border-subtle)。 */
   border: 1px solid var(--border-subtle);
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.05)。 */
   background: rgba(255,255,255,0.05);
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
   color: var(--text-muted);
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
   display: grid; place-items: center; /* 居中图标 */
+  /* 居中图标 */
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置属性变化时的过渡动画。 这里写成 color 0.15s, border-color 0.15s, transform 0.3s。 */
   transition: color 0.15s, border-color 0.15s, transform 0.3s;
+/* 这一行表示当前这组样式写完了。 */
 }
-.player-toggle:hover { color: var(--text-primary); border-color: var(--color-primary); }
-.player-toggle.flipped { transform: rotate(180deg); } /* 可用于展开/折叠图标状态 */
+/* 下面开始给选择器 .player-toggle:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.player-toggle:hover {
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
+  color: var(--text-primary);
+  /* 单独设置边框颜色。 这里写成 var(--color-primary)。 */
+  border-color: var(--color-primary);
+}
+/* 下面开始给选择器 .player-toggle.flipped 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.player-toggle.flipped {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 rotate(180deg)。 */
+  transform: rotate(180deg);
+  /* 可用于展开/折叠图标状态 */
+}
 
 /* 消息列表：可滚动区域，使用 smooth 滚动和 overscroll-behavior 防止滚动穿透 */
+/* 下面开始给选择器 .chat-messages 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-messages {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1;
+  /* 设置元素允许的最小高度。 这里写成 0。 */
   min-height: 0; /* 与 overflow-y 一起防止 flex 父容器高度问题 */
+  /* 与 overflow-y 一起防止 flex 父容器高度问题 */
+  /* 控制纵向溢出的处理方式。 这里写成 auto。 */
   overflow-y: auto;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 10px 20px。 */
   padding: 10px 20px;
+  /* 设置下内边距。 这里写成 28px。 */
   padding-bottom: 28px; /* 为输入区留出可视缓冲 */
+  /* 为输入区留出可视缓冲 */
+  /* 控制滚动时是否平滑移动。 这里写成 smooth。 */
   scroll-behavior: smooth;
+  /* 控制滚动到边界时的回弹或滚动穿透行为。 这里写成 contain。 */
   overscroll-behavior: contain; /* 阻止滚动到页面底部时出现穿透体验 */
+  /* 阻止滚动到页面底部时出现穿透体验 */
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 隐藏滚动条以获得更整洁的外观（仅适用于支持的浏览器） */
-.chat-messages::-webkit-scrollbar { width: 0; }
+/* 下面开始给选择器 .chat-messages::-webkit-scrollbar 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.chat-messages::-webkit-scrollbar {
+  /* 设置元素宽度。 这里写成 0。 */
+  width: 0;
+}
 
 /* 在消息列表末尾加入占位块，避免最后一条消息被输入区遮挡 */
+/* 下面开始给选择器 .chat-messages::after 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-messages::after {
+  /* 给伪元素设置要显示的内容。 这里写成 ''。 */
   content: '';
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 block。 */
   display: block;
+  /* 设置元素高度。 这里写成 28px。 */
   height: 28px;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 单条消息容器：头像 + 消息气泡，限制最大宽度提升可读性 */
+/* 下面开始给选择器 .msg 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .msg {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 flex-start。 */
   align-items: flex-start;
+  /* 设置子元素之间的间距。 这里写成 8px。 */
   gap: 8px;
+  /* 设置下外边距。 这里写成 16px。 */
   margin-bottom: 16px;
+  /* 设置元素允许的最大宽度。 这里写成 85%。 */
   max-width: 85%; /* 防止消息气泡过宽，保持行长舒适 */
+  /* 防止消息气泡过宽，保持行长舒适 */
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 用户消息放到右侧（row-reverse），并通过 margin-left: auto 将其推到右边 */
-.msg.user { flex-direction: row-reverse; margin-left: auto; }
+/* 下面开始给选择器 .msg.user 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.msg.user {
+  /* 设置 flex 主轴方向，决定子元素是横排还是竖排。 这里写成 row-reverse。 */
+  flex-direction: row-reverse;
+  /* 设置左外边距。 这里写成 auto。 */
+  margin-left: auto;
+}
 
 /* 消息头像：小圆形头像，与消息行顶部对齐 */
+/* 下面开始给选择器 .msg-avatar 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .msg-avatar {
+  /* 设置元素宽度。 这里写成 28px; height: 28px。 */
   width: 28px; height: 28px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+  /* 设置上外边距。 这里写成 2px。 */
   margin-top: 2px; /* 轻微下移以视觉居中对齐文本 */
+  /* 轻微下移以视觉居中对齐文本 */
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 公共消息气泡样式：圆角、内边距、可换行 */
+/* 下面开始给选择器 .msg-bubble 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .msg-bubble {
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 10px 14px。 */
   padding: 10px 14px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 16px。 */
   border-radius: 16px;
+  /* 设置字号大小。 这里写成 14px。 */
   font-size: 14px;
+  /* 设置行高，影响文字上下留白。 这里写成 1.5。 */
   line-height: 1.5;
+  /* 设置元素允许的最小宽度。 这里写成 0。 */
   min-width: 0; /* 与 overflow-wrap 一起确保长文本正确换行 */
+  /* 与 overflow-wrap 一起确保长文本正确换行 */
+  /* 设置 overflow-wrap 这个样式属性。 这里写成 anywhere。 */
   overflow-wrap: anywhere;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 助手/系统消息的气泡：浅色背景与细边框，左下角圆角改为小尺寸以形成指向样式 */
+/* 下面开始给选择器 .msg.assistant .msg-bubble 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .msg.assistant .msg-bubble {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.1)。 */
   background: rgba(255,255,255,0.1);
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid rgba(255,255,255,0.05)。 */
   border: 1px solid rgba(255,255,255,0.05);
+  /* 设置 border-bottom-left-radius 这个样式属性。 这里写成 4px。 */
   border-bottom-left-radius: 4px; /* 形成“尾巴”效果（视觉指向） */
+  /* 形成“尾巴”效果（视觉指向） */
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 用户消息气泡：更高对比度背景，文字使用主要文本色，右下角做“尾巴” */
+/* 下面开始给选择器 .msg.user .msg-bubble 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .msg.user .msg-bubble {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.2)。 */
   background: rgba(255,255,255,0.2);
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
   color: var(--text-primary);
+  /* 设置 border-bottom-right-radius 这个样式属性。 这里写成 4px。 */
   border-bottom-right-radius: 4px;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 歌曲卡片：在消息中嵌入的简洁音乐展示卡（封面/信息/操作按钮） */
+/* 下面开始给选择器 .song-card 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
   align-items: center;
+  /* 设置子元素之间的间距。 这里写成 10px。 */
   gap: 10px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 8px 12px。 */
   padding: 8px 12px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.05)。 */
   background: rgba(255,255,255,0.05);
+  /* 设置圆角，让元素边缘更柔和。 这里写成 var(--radius-sm)。 */
   border-radius: var(--radius-sm);
+  /* 设置上外边距。 这里写成 8px。 */
   margin-top: 8px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid var(--border-subtle)。 */
   border: 1px solid var(--border-subtle);
+  /* 设置属性变化时的过渡动画。 这里写成 opacity 0.2s。 */
   transition: opacity 0.2s; /* 用于禁用/启用过渡 */
+  /* 用于禁用/启用过渡 */
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .song-card.disabled 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card.disabled {
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 0.4。 */
   opacity: 0.4;
+  /* 控制元素是否接收鼠标或触摸事件。 这里写成 none。 */
   pointer-events: none;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 歌曲封面：固定尺寸方块，圆角微调，object-fit 保持封面比例 */
+/* 下面开始给选择器 .song-card-cover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card-cover {
+  /* 设置元素宽度。 这里写成 40px; height: 40px。 */
   width: 40px; height: 40px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 6px。 */
   border-radius: 6px;
+  /* 设置图片或视频如何填充容器。 这里写成 cover。 */
   object-fit: cover;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 歌曲信息区域：弹性占位以适应不同宽度，min-width:0 允许文本正确截断 */
+/* 下面开始给选择器 .song-card-info 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card-info {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1;
+  /* 设置元素允许的最小宽度。 这里写成 0。 */
   min-width: 0;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 歌曲名：单行显示并使用省略号处理过长文本 */
+/* 下面开始给选择器 .song-card-name 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card-name {
+  /* 设置字号大小。 这里写成 13px。 */
   font-size: 13px;
+  /* 设置字重，也就是文字粗细。 这里写成 500。 */
   font-weight: 500;
+  /* 控制文本是否换行。 这里写成 nowrap。 */
   white-space: nowrap;
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
   overflow: hidden;
+  /* 控制超长文本如何显示，比如省略号。 这里写成 ellipsis。 */
   text-overflow: ellipsis;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 歌手名样式：较小字号和次要颜色 */
+/* 下面开始给选择器 .song-card-artist 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card-artist {
+  /* 设置字号大小。 这里写成 11px。 */
   font-size: 11px;
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
   color: var(--text-muted);
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 卡片右侧的操作按钮组：水平排列，通常包含播放/更多按钮 */
+/* 下面开始给选择器 .song-card-actions 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card-actions {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 设置子元素之间的间距。 这里写成 6px。 */
   gap: 6px;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 卡片上的小圆按钮：一致尺寸与边框，hover 时加背景提示 */
+/* 下面开始给选择器 .song-card-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .song-card-btn {
+  /* 设置元素宽度。 这里写成 28px; height: 28px。 */
   width: 28px; height: 28px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid var(--border-subtle)。 */
   border: 1px solid var(--border-subtle);
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 none。 */
   background: none;
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
   color: var(--text-primary);
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
   display: grid; place-items: center;
+  /* 设置字号大小。 这里写成 12px。 */
   font-size: 12px;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.15s。 */
   transition: background 0.15s;
+/* 这一行表示当前这组样式写完了。 */
 }
-.song-card-btn:hover { background: rgba(255,255,255,0.1); }
+/* 下面开始给选择器 .song-card-btn:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.song-card-btn:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.1)。 */
+  background: rgba(255,255,255,0.1);
+}
 
 /* 语音消息容器：用于显示语音条或语音摘要，整体可点击以触发播放 */
+/* 下面开始给选择器 .voice-msg 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .voice-msg {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 flex-start。 */
   align-items: flex-start;
+  /* 设置子元素之间的间距。 这里写成 8px。 */
   gap: 8px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 8px 12px。 */
   padding: 8px 12px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.05)。 */
   background: rgba(255,255,255,0.05);
+  /* 设置圆角，让元素边缘更柔和。 这里写成 var(--radius-sm)。 */
   border-radius: var(--radius-sm);
+  /* 设置上外边距。 这里写成 8px。 */
   margin-top: 8px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 语音文本（如时长/转录摘要）：字号略小，颜色更弱，line-height 增强可读性 */
+/* 下面开始给选择器 .voice-msg .voice-text 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .voice-msg .voice-text {
+  /* 设置字号大小。 这里写成 12px。 */
   font-size: 12px;
+  /* 设置文字颜色。 这里写成 var(--text-secondary)。 */
   color: var(--text-secondary);
+  /* 设置行高，影响文字上下留白。 这里写成 1.6。 */
   line-height: 1.6;
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1; /* 占满剩余空间，便于在右侧放置播放图标或进度 */
+  /* 占满剩余空间，便于在右侧放置播放图标或进度 */
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 聊天输入区域：包含输入框和发送按钮，使用安全区内边距以兼容刘海屏/底部手势 */
+/* 下面开始给选择器 .chat-input-area 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-input-area {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 设置子元素之间的间距。 这里写成 8px。 */
   gap: 8px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 10px 20px calc(16px + env(safe-area-inset-bottom, 0px))。 */
   padding: 10px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0; /* 保持固定高度，避免被压缩 */
+  /* 保持固定高度，避免被压缩 */
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .chat-input 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .chat-input {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1;
+  /* 设置元素高度。 这里写成 40px。 */
   height: 40px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid var(--border-subtle)。 */
   border: 1px solid var(--border-subtle);
+  /* 设置圆角，让元素边缘更柔和。 这里写成 20px。 */
   border-radius: 20px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.05)。 */
   background: rgba(255,255,255,0.05);
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
   color: var(--text-primary);
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 0 16px。 */
   padding: 0 16px;
+  /* 设置字号大小。 这里写成 14px。 */
   font-size: 14px;
+  /* 设置轮廓线，常用于焦点态。 这里写成 none。 */
   outline: none;
+  /* 设置字体族。 这里写成 inherit。 */
   font-family: inherit; /* 继承全局字体，便于统一调整 */
+  /* 继承全局字体，便于统一调整 */
+/* 这一行表示当前这组样式写完了。 */
 }
-.chat-input::placeholder { color: var(--text-muted); }
-.chat-input:focus { border-color: var(--color-primary); }
+/* 下面开始给选择器 .chat-input::placeholder 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.chat-input::placeholder {
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
+  color: var(--text-muted);
+}
+/* 下面开始给选择器 .chat-input:focus 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.chat-input:focus {
+  /* 单独设置边框颜色。 这里写成 var(--color-primary)。 */
+  border-color: var(--color-primary);
+}
 
 /* 发送按钮：圆形、带轻微玻璃模糊效果（backdrop-filter），hover 提示，disabled 时降低不透明度 */
+/* 下面开始给选择器 .send-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .send-btn {
+  /* 设置元素宽度。 这里写成 40px; height: 40px。 */
   width: 40px; height: 40px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid rgba(255,255,255,0.12)。 */
   border: 1px solid rgba(255,255,255,0.12);
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.1)。 */
   background: rgba(255,255,255,0.1);
+  /* 对元素背后的区域做模糊或调色，常用于毛玻璃效果。 这里写成 blur(20px)。 */
   backdrop-filter: blur(20px);
+  /* 给 WebKit 浏览器补充毛玻璃兼容写法。 这里写成 blur(20px)。 */
   -webkit-backdrop-filter: blur(20px);
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
   color: var(--text-primary);
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
   display: grid; place-items: center;
+  /* 设置字号大小。 这里写成 16px。 */
   font-size: 16px;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.15s。 */
   transition: background 0.15s;
+/* 这一行表示当前这组样式写完了。 */
 }
-.send-btn:hover { background: rgba(255,255,255,0.18); }
-.send-btn:disabled { opacity: 0.3; cursor: default; }
+/* 下面开始给选择器 .send-btn:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.send-btn:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.18)。 */
+  background: rgba(255,255,255,0.18);
+}
+/* 下面开始给选择器 .send-btn:disabled 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.send-btn:disabled {
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 0.3。 */
+  opacity: 0.3;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 default。 */
+  cursor: default;
+}
 
 /* AI 思考中动画：三点跳动，给用户交互反馈 */
+/* 下面开始给选择器 .typing-indicator 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .typing-indicator {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
   align-items: center;
+  /* 设置子元素之间的间距。 这里写成 4px。 */
   gap: 4px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 14px 18px。 */
   padding: 14px 18px;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .typing-dot 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .typing-dot {
+  /* 设置元素宽度。 这里写成 7px; height: 7px。 */
   width: 7px; height: 7px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--text-muted)。 */
   background: var(--text-muted);
+  /* 设置关键帧动画。 这里写成 typingBounce 1.4s ease-in-out infinite。 */
   animation: typingBounce 1.4s ease-in-out infinite;
+/* 这一行表示当前这组样式写完了。 */
 }
-.typing-dot:nth-child(2) { animation-delay: 0.16s; }
-.typing-dot:nth-child(3) { animation-delay: 0.32s; }
+/* 下面开始给选择器 .typing-dot:nth-child(2) 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.typing-dot:nth-child(2) {
+  /* 设置 animation-delay 这个样式属性。 这里写成 0.16s。 */
+  animation-delay: 0.16s;
+}
+/* 下面开始给选择器 .typing-dot:nth-child(3) 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.typing-dot:nth-child(3) {
+  /* 设置 animation-delay 这个样式属性。 这里写成 0.32s。 */
+  animation-delay: 0.32s;
+}
 
+/* 开始定义一个关键帧动画，后面会描述动画在不同时间点的状态。 */
 @keyframes typingBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-6px); opacity: 1; }
+/* 下面开始给选择器 0%, 60%, 100% 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+0%, 60%, 100% {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 translateY(0)。 */
+  transform: translateY(0);
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 0.4。 */
+  opacity: 0.4;
+}
+/* 下面开始给选择器 30% 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+30% {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 translateY(-6px)。 */
+  transform: translateY(-6px);
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 1。 */
+  opacity: 1;
+}
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 响应式优化：当可视高度较小时，适当压缩内边距以节省垂直空间 */
+/* 开始一个媒体查询：只有满足这个屏幕条件时，里面的样式才会生效。 */
 @media (max-height: 520px) {
+/* 下面开始给选择器 .chat-header 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .chat-header {
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 8px 16px。 */
     padding: 8px 16px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
+/* 下面开始给选择器 .chat-messages 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .chat-messages {
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 8px 16px 18px。 */
     padding: 8px 16px 18px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
+/* 下面开始给选择器 .chat-input-area 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .chat-input-area {
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 8px 16px calc(12px + env(safe-area-inset-bottom, 0px))。 */
     padding: 8px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+/* 这一行表示当前这组样式写完了。 */
   }
+/* 这一行表示当前这组样式写完了。 */
 }

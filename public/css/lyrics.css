@@ -1,9 +1,39 @@
+/*
+  lyrics.css —— 新手学习版详细注释
+  说明：
+  1. 我保留了原来的样式功能，只补充更适合初学者阅读的中文注释。
+  2. 我尽量做到“每个选择器讲清楚、每条关键属性讲用途”。
+  3. 如果你想学得更扎实，建议优先看选择器注释，再看每条属性注释。
+*/
+
 /* public/css/lyrics.css */
+/* 下面开始给选择器 .lyrics-content 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .lyrics-content {
+  /* 设置文字颜色。 这里写成 var(--text-secondary)。 */
   color: var(--text-secondary);
+  /* 设置字号大小。 这里写成 15px。 */
   font-size: 15px;
+  /* 设置行高，影响文字上下留白。 这里写成 2。 */
   line-height: 2;
+/* 这一行表示当前这组样式写完了。 */
 }
-.lyrics-line { transition: color 0.3s, font-size 0.3s; }
-.lyrics-line.active { color: var(--text-primary); font-size: 17px; font-weight: 500; }
-.lyrics-line.past { color: var(--text-muted); }
+/* 下面开始给选择器 .lyrics-line 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.lyrics-line {
+  /* 设置属性变化时的过渡动画。 这里写成 color 0.3s, font-size 0.3s。 */
+  transition: color 0.3s, font-size 0.3s;
+}
+/* 下面开始给选择器 .lyrics-line.active 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.lyrics-line.active {
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
+  color: var(--text-primary);
+  /* 设置字号大小。 这里写成 17px。 */
+  font-size: 17px;
+  /* 设置字重，也就是文字粗细。 这里写成 500。 */
+  font-weight: 500;
+}
+/* 下面开始给选择器 .lyrics-line.past 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.lyrics-line.past {
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
+  color: var(--text-muted);
+}
+

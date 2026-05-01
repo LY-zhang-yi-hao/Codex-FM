@@ -167,6 +167,7 @@ app.get('/api/playlists', (req, res) => {
       ), '') AS cover_url
     FROM playlists p
     LEFT JOIN playlist_songs ps ON ps.playlist_id = p.id
+    WHERE p.type != 'daily'
     GROUP BY p.id
     ORDER BY datetime(p.created_at) DESC, p.id DESC
   `).all();
@@ -198,6 +199,14 @@ app.post('/api/playlists/:id/songs', (req, res) => {
   db.prepare('INSERT OR REPLACE INTO playlist_songs (playlist_id, song_id, song_name, artist, album, cover_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .run(req.params.id, song_id, song_name, artist, album, cover_url, order);
   res.json({ ok: true });
+});
+
+app.delete('/api/playlists/:id', (req, res) => {
+  const playlist = db.prepare("SELECT * FROM playlists WHERE id = ? AND type != 'daily'").get(req.params.id);
+  if (!playlist) return res.status(404).json({ error: '歌单不存在' });
+
+  db.prepare('DELETE FROM playlists WHERE id = ?').run(req.params.id);
+  res.json({ ok: true, id: Number(req.params.id) });
 });
 
 app.delete('/api/playlists/:id/songs/:songId', (req, res) => {
@@ -388,6 +397,11 @@ function extractResponseText(response) {
   }
 
   return '';
+}
+
+async function getResponseTextWithFallback(client, request, preferredModel = getModelName()) {
+  const response = await createResponseWithFallback(client, request, preferredModel);
+  return extractResponseText(response);
 }
 
 function parseJsonLoose(text, fallback) {
@@ -694,86 +708,482 @@ app.post('/api/dispatch', async (req, res) => {
 
 // ========== 定时任务 ==========
 let schedulerStatus = {
-  dailyPlaylist: { lastRun: null, status: 'idle' },
-  moodCheck: { lastRun: null, status: 'idle' }
+  dailyPlaylist: { lastRun: null, status: 'idle', lastError: null },
+  moodCheck: { lastRun: null, status: 'idle', lastError: null }
 };
 
-// 每日歌单推荐（每天 07:00）
-cron.schedule('0 7 * * *', async () => {
-  console.log('执行每日歌单推荐...');
-  schedulerStatus.dailyPlaylist.status = 'running';
+function mapPlaylistSongRow(row) {
+  return {
+    id: String(row?.song_id || row?.id || ''),
+    name: row?.song_name || row?.name || '',
+    artist: row?.artist || '',
+    album: row?.album || '',
+    cover: row?.cover_url || row?.cover || ''
+  };
+}
+
+function getLatestDailyPlaylistRecord() {
+  const playlist = db.prepare("SELECT * FROM playlists WHERE type = 'daily' ORDER BY datetime(created_at) DESC, id DESC LIMIT 1").get();
+  if (!playlist) return null;
+  const songs = db.prepare('SELECT * FROM playlist_songs WHERE playlist_id = ? ORDER BY sort_order').all(playlist.id);
+  return {
+    ...playlist,
+    songs: songs.map(mapPlaylistSongRow)
+  };
+}
+
+function getCurrentMoodRecord() {
+  const mood = db.prepare("SELECT value FROM preferences WHERE key = 'current_mood'").get();
+  if (!mood?.value) return null;
   try {
-    const client = createModelClient();
-    const history = db.prepare('SELECT * FROM play_history ORDER BY played_at DESC LIMIT 50').all();
+    return JSON.parse(mood.value);
+  } catch {
+    return null;
+  }
+}
 
-    const prompt = `根据以下信息，推荐今日歌单（10首歌），返回 JSON 格式：
-[{"id": "网易云歌曲ID", "name": "歌名", "artist": "艺术家", "album": "专辑", "cover": "封面URL"}]
+function isSameLocalDay(a, b = new Date()) {
+  const ad = new Date(a);
+  return ad.getFullYear() === b.getFullYear()
+    && ad.getMonth() === b.getMonth()
+    && ad.getDate() === b.getDate();
+}
 
-${configCache.taste ? '品味偏好：' + configCache.taste : ''}
-最近听歌记录：${history.map(h => h.song_name + ' - ' + h.artist).join(', ')}`;
+function isMoodFresh(moodData, now = Date.now()) {
+  if (!moodData?.generated_at) return false;
+  const generatedAt = new Date(moodData.generated_at).getTime();
+  if (!Number.isFinite(generatedAt)) return false;
+  return now - generatedAt < 60 * 60 * 1000;
+}
 
-    const response = await createResponseWithFallback(client, {
-      max_output_tokens: 1024,
-      input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }] }]
+function getRecentReferenceSongs(limit = 120) {
+  const history = db.prepare('SELECT song_id, song_name, artist, album, cover_url FROM play_history ORDER BY played_at DESC LIMIT ?').all(limit);
+  const favorites = db.prepare('SELECT song_id, song_name, artist, album, cover_url FROM favorites ORDER BY added_at DESC LIMIT ?').all(limit);
+  const merged = [...history, ...favorites];
+  const seen = new Set();
+  const songs = [];
+
+  for (const row of merged) {
+    const song = mapPlaylistSongRow(row);
+    if (!song.name) continue;
+    const key = song.id || `${song.name}::${song.artist}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    songs.push(song);
+  }
+
+  return songs;
+}
+
+function getRecentlyPlayedSongIds(limit = 30) {
+  const rows = db.prepare("SELECT song_id FROM play_history WHERE song_id IS NOT NULL AND song_id != '' ORDER BY played_at DESC LIMIT ?").all(limit);
+  return new Set(rows.map((row) => String(row.song_id)));
+}
+
+function makeSongIdentity(song) {
+  const name = String(song?.name || song?.song_name || '').trim().toLowerCase();
+  const artist = String(song?.artist || '').trim().toLowerCase();
+  return name && artist ? `${name}::${artist}` : '';
+}
+
+function getRecentlyPlayedSongKeys(limit = 40) {
+  const rows = db.prepare('SELECT song_name, artist FROM play_history ORDER BY played_at DESC LIMIT ?').all(limit);
+  const keys = new Set();
+  for (const row of rows) {
+    const key = makeSongIdentity({ name: row.song_name, artist: row.artist });
+    if (key) keys.add(key);
+  }
+  return keys;
+}
+
+function buildTasteSummary() {
+  const recent = db.prepare('SELECT song_name, artist FROM play_history ORDER BY played_at DESC LIMIT 12').all();
+  const favorites = db.prepare('SELECT song_name, artist FROM favorites ORDER BY added_at DESC LIMIT 20').all();
+
+  const artistCount = new Map();
+  const recentPairs = [];
+
+  for (const row of [...recent, ...favorites]) {
+    if (row.artist) {
+      const artists = String(row.artist).split('/').map((item) => item.trim()).filter(Boolean);
+      for (const artist of artists) {
+        artistCount.set(artist, (artistCount.get(artist) || 0) + 1);
+      }
+    }
+    if (row.song_name && row.artist && recentPairs.length < 8) {
+      recentPairs.push(`${row.song_name} - ${row.artist}`);
+    }
+  }
+
+  const topArtists = [...artistCount.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([artist]) => artist);
+
+  return {
+    topArtists,
+    recentPairs
+  };
+}
+
+function readScheduleConfig() {
+  const fp = path.join(configDir, 'schedule.json');
+  if (!fs.existsSync(fp)) return [];
+  try {
+    const raw = JSON.parse(fs.readFileSync(fp, 'utf-8'));
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function buildFallbackMood(now = new Date()) {
+  const schedule = readScheduleConfig()
+    .map((item) => {
+      const [hour = '0', minute = '0'] = String(item.time || '0:0').split(':');
+      return {
+        ...item,
+        minutes: Number(hour) * 60 + Number(minute)
+      };
+    })
+    .filter((item) => Number.isFinite(item.minutes))
+    .sort((a, b) => a.minutes - b.minutes);
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  let active = schedule.filter((item) => item.minutes <= currentMinutes).pop() || schedule[0] || null;
+
+  if (!active) {
+    active = {
+      event: '此刻',
+      mood: now.getHours() >= 22 || now.getHours() < 6 ? 'calm' : now.getHours() < 12 ? 'focus' : 'chill'
+    };
+  }
+
+  const genreByMood = {
+    energetic: '活力流行 / 电子',
+    focus: '器乐 / 氛围 / 后摇',
+    relax: '轻松爵士 / 独立流行',
+    chill: '城市流行 / R&B',
+    calm: '钢琴 / 民谣 / 氛围'
+  };
+
+  return {
+    mood: active.mood || 'chill',
+    genre: genreByMood[active.mood] || '轻松流行',
+    message: active.event ? `现在更适合 ${active.event} 的氛围，电台会偏向 ${active.mood || 'chill'} 的听感。` : '电台会保持柔和、顺耳的流动感。',
+    generated_at: now.toISOString(),
+    source: 'fallback'
+  };
+}
+
+function scoreSongForMood(song, moodData) {
+  const text = `${song.name} ${song.artist} ${song.album}`.toLowerCase();
+  const mood = String(moodData?.mood || '').toLowerCase();
+  const genre = String(moodData?.genre || '').toLowerCase();
+
+  const keywordsByMood = {
+    energetic: ['run', 'dance', 'power', '燃', '热血', '快乐', '夏', 'party', 'light', 'jump'],
+    focus: ['piano', 'instrument', '纯音乐', '钢琴', 'light', 'night', '雨', '静', 'study', 'moon'],
+    relax: ['lazy', 'jazz', '蓝调', '轻松', '午后', 'coffee', '风', 'sunset', '暖'],
+    chill: ['city', 'love', '夜', '路', '街', '心', '情歌', '通勤', 'story', 'slow'],
+    calm: ['sleep', 'dream', '晚安', '海', '星', 'moon', 'quiet', 'soft', '民谣', 'acoustic']
+  };
+
+  let score = 0;
+  for (const keyword of keywordsByMood[mood] || []) {
+    if (text.includes(keyword)) score += 3;
+    if (genre.includes(keyword)) score += 1;
+  }
+
+  if (genre && text.includes(genre.replace(/\s*\/\s*/g, ' '))) score += 4;
+  return score;
+}
+
+function scoreSongForTaste(song, tasteSummary) {
+  const text = `${song.name} ${song.artist} ${song.album}`.toLowerCase();
+  let score = 0;
+
+  for (const artist of tasteSummary?.topArtists || []) {
+    if (text.includes(String(artist).toLowerCase())) score += 4;
+  }
+
+  for (const sample of tasteSummary?.recentPairs || []) {
+    const parts = String(sample).toLowerCase().split(' - ');
+    if (parts[0] && text.includes(parts[0])) score += 1;
+    if (parts[1] && text.includes(parts[1])) score += 2;
+  }
+
+  return score;
+}
+
+function filterBlockedSongs(songs, blockedIds, blockedKeys) {
+  return songs.filter((song) => {
+    const songId = String(song.id || '');
+    const songKey = makeSongIdentity(song);
+    if (songId && blockedIds.has(songId)) return false;
+    if (songKey && blockedKeys.has(songKey)) return false;
+    return !!song.name;
+  });
+}
+
+async function searchMoodCandidateSongs(moodData, tasteSummary, blockedIds, blockedKeys) {
+  const mood = String(moodData?.mood || '').trim();
+  const genre = String(moodData?.genre || '').trim();
+  const artistHints = (tasteSummary?.topArtists || []).slice(0, 3);
+  const keywordSeeds = [
+    `${genre} 华语`,
+    `${mood} 华语`,
+    `${genre} 通勤`,
+    `${mood} 夜晚`
+  ];
+
+  for (const artist of artistHints) {
+    keywordSeeds.push(`${genre} ${artist}`);
+    keywordSeeds.push(`${mood} ${artist}`);
+  }
+
+  const keywords = [...new Set(keywordSeeds.map((item) => item.trim()).filter(Boolean))].slice(0, 8);
+  const seen = new Set();
+  const candidates = [];
+
+  for (const keyword of keywords) {
+    try {
+      const response = await fetch(neteaseUrl('/cloudsearch', { keywords: keyword, type: 1, limit: 12 }));
+      const data = await response.json();
+      const results = data?.result?.songs || [];
+
+      for (const item of results) {
+        const song = {
+          id: String(item.id),
+          name: item.name,
+          artist: (item.ar || []).map((artist) => artist.name).join('/'),
+          album: item.al?.name || '',
+          cover: item.al?.picUrl || ''
+        };
+        const uniqueKey = song.id || makeSongIdentity(song);
+        if (!uniqueKey || seen.has(uniqueKey)) continue;
+        seen.add(uniqueKey);
+        candidates.push(song);
+      }
+    } catch (error) {
+      console.warn('[scheduler] 网易云候选搜索失败:', keyword, error.message);
+    }
+  }
+
+  return filterBlockedSongs(candidates, blockedIds, blockedKeys)
+    .map((song, index) => ({
+      song,
+      index,
+      score: scoreSongForMood(song, moodData) + scoreSongForTaste(song, tasteSummary)
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.index - b.index;
+    })
+    .map((item) => item.song);
+}
+
+function buildFallbackDailySongs(moodData, tasteSummary, blockedIds, blockedKeys) {
+  const songs = getRecentReferenceSongs(180);
+  if (songs.length === 0) return [];
+
+  const ranked = filterBlockedSongs(songs, blockedIds, blockedKeys)
+    .map((song, index) => ({
+      song,
+      index,
+      score: scoreSongForMood(song, moodData) + scoreSongForTaste(song, tasteSummary)
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.index - b.index;
     });
 
-    const content = extractResponseText(response);
-    let songs = parseJsonLoose(content, []);
+  const selected = [];
+  const seenArtists = new Set();
 
-    if (songs.length > 0) {
-      // 创建每日歌单
-      const result = db.prepare('INSERT INTO playlists (name, type) VALUES (?, ?)').run('今日推荐', 'daily');
-      const playlistId = result.lastInsertRowid;
-      const stmt = db.prepare('INSERT INTO playlist_songs (playlist_id, song_id, song_name, artist, album, cover_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)');
-      songs.forEach((s, i) => {
-        stmt.run(playlistId, s.id, s.name, s.artist, s.album || '', s.cover || '', i);
+  for (const item of ranked) {
+    const artistKey = item.song.artist || '';
+    if (seenArtists.has(artistKey) && selected.length < 6) continue;
+    selected.push(item.song);
+    seenArtists.add(artistKey);
+    if (selected.length >= 10) break;
+  }
+
+  return selected;
+}
+
+async function generateDailyPlaylist(options = {}) {
+  const { force = false, trigger = 'manual' } = options;
+  const existing = getLatestDailyPlaylistRecord();
+  if (!force && existing && isSameLocalDay(existing.created_at)) {
+    return existing;
+  }
+
+  console.log(`[scheduler] 执行每日歌单推荐 (${trigger})...`);
+  schedulerStatus.dailyPlaylist.status = 'running';
+  schedulerStatus.dailyPlaylist.lastError = null;
+
+  try {
+    let songs = [];
+    const history = db.prepare('SELECT * FROM play_history ORDER BY played_at DESC LIMIT 50').all();
+    const moodData = await generateMoodCheck({ force: false, trigger: `playlist-${trigger}` });
+    const tasteSummary = buildTasteSummary();
+    const blockedIds = getRecentlyPlayedSongIds(25);
+    const blockedKeys = getRecentlyPlayedSongKeys(40);
+    const candidateSongs = await searchMoodCandidateSongs(moodData, tasteSummary, blockedIds, blockedKeys);
+
+    try {
+      const client = createModelClient();
+      const prompt = `根据以下信息，推荐今日歌单（10首歌），返回 JSON 格式：
+[{"id": "网易云歌曲ID", "name": "歌名", "artist": "艺术家", "album": "专辑", "cover": "封面URL"}]
+
+当前电台情绪：${moodData?.mood || 'chill'}
+推荐曲风：${moodData?.genre || '轻松流行'}
+情绪说明：${moodData?.message || ''}
+${configCache.taste ? '品味偏好：' + configCache.taste : ''}
+偏好艺人摘要：${tasteSummary.topArtists.join('、') || '暂无'}
+最近偏好样本：${tasteSummary.recentPairs.join('；') || '暂无'}
+今天/刚刚听过，尽量不要重复推荐这些 song_id：${[...blockedIds].join(', ') || '无'}
+今天/刚刚听过，尽量不要重复这些歌曲：${[...blockedKeys].slice(0, 12).join('；') || '无'}
+最近听歌记录（只做参考，不要机械重复）：${history.map(h => h.song_name + ' - ' + h.artist).join(', ')}
+网易云候选池（优先从这里挑，避免瞎编 song_id）：${candidateSongs.slice(0, 20).map((song) => `${song.id}|${song.name}|${song.artist}|${song.album}`).join('；') || '暂无'}
+
+要求：
+1. 优先符合当前情绪和曲风
+2. 尽量避开刚刚听过的歌
+3. 如果要推荐熟悉艺人，也尽量换不同歌曲
+4. 不要只复读最近播放记录
+5. 优先从候选池里选歌；如果不用候选池，也必须返回真实可解析的网易云 song_id`;
+
+      const content = await getResponseTextWithFallback(client, {
+        max_output_tokens: 1024,
+        input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }] }]
       });
+      const parsedSongs = parseJsonLoose(content, []);
+      if (Array.isArray(parsedSongs) && parsedSongs.length > 0) {
+        songs = (await Promise.all(parsedSongs.map((song) => resolveSong(song))))
+          .map(mapPlaylistSongRow)
+          .filter((song) => song.id && song.name);
+        songs = filterBlockedSongs(songs, blockedIds, blockedKeys);
+      }
+    } catch (modelError) {
+      console.warn('[scheduler] 今日歌单 AI 生成失败，改用本地回退:', modelError.message);
     }
+
+    if (songs.length === 0) {
+      songs = candidateSongs.slice(0, 10);
+    }
+
+    if (songs.length === 0) {
+      songs = buildFallbackDailySongs(moodData, tasteSummary, blockedIds, blockedKeys);
+    }
+
+    if (songs.length === 0) {
+      throw new Error('没有足够的听歌记录或收藏，暂时无法生成今日推荐');
+    }
+
+    const result = db.prepare('INSERT INTO playlists (name, type) VALUES (?, ?)').run('今日推荐', 'daily');
+    const playlistId = result.lastInsertRowid;
+    const stmt = db.prepare('INSERT INTO playlist_songs (playlist_id, song_id, song_name, artist, album, cover_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    songs.forEach((song, index) => {
+      stmt.run(playlistId, song.id, song.name, song.artist, song.album || '', song.cover || '', index);
+    });
+
+    const payload = {
+      id: playlistId,
+      name: '今日推荐',
+      type: 'daily',
+      created_at: new Date().toISOString(),
+      songs
+    };
 
     schedulerStatus.dailyPlaylist.lastRun = new Date().toISOString();
     schedulerStatus.dailyPlaylist.status = 'idle';
-    console.log('每日歌单推荐完成');
+    console.log(`[scheduler] 每日歌单推荐完成，共 ${songs.length} 首`);
+    return payload;
   } catch (err) {
     console.error('每日歌单推荐失败:', err);
     schedulerStatus.dailyPlaylist.status = 'error';
+    schedulerStatus.dailyPlaylist.lastError = err.message;
+    throw err;
   }
-});
+}
 
-// 每小时情绪检查
-cron.schedule('0 * * * *', async () => {
-  console.log('执行情绪检查...');
+async function generateMoodCheck(options = {}) {
+  const { force = false, trigger = 'manual' } = options;
+  const existing = getCurrentMoodRecord();
+  if (!force && existing && isMoodFresh(existing)) {
+    return existing;
+  }
+
+  console.log(`[scheduler] 执行情绪检查 (${trigger})...`);
   schedulerStatus.moodCheck.status = 'running';
-  try {
-    const client = createModelClient();
-    const hour = new Date().getHours();
-    const recentChats = db.prepare('SELECT * FROM chat_messages ORDER BY id DESC LIMIT 10').all();
+  schedulerStatus.moodCheck.lastError = null;
 
-    const prompt = `当前时间：${hour}:00
+  try {
+    const now = new Date();
+    let moodData = null;
+
+    try {
+      const client = createModelClient();
+      const hour = now.getHours();
+      const recentChats = db.prepare('SELECT * FROM chat_messages ORDER BY id DESC LIMIT 10').all();
+
+      const prompt = `当前时间：${hour}:00
 ${configCache.moodrules ? '情绪规则：' + configCache.moodrules : ''}
 最近聊天：${recentChats.map(c => c.content).join('\n')}
 
 判断当前电台情绪，返回 JSON：
 {"mood": "情绪标签", "genre": "推荐曲风", "message": "一句话描述"}`;
 
-    const response = await createResponseWithFallback(client, {
-      max_output_tokens: 256,
-      input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }] }]
-    });
-
-    const content = extractResponseText(response);
-    let moodData = parseJsonLoose(content, {});
-
-    if (moodData.mood) {
-      db.prepare('INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)').run('current_mood', JSON.stringify(moodData));
+      const content = await getResponseTextWithFallback(client, {
+        max_output_tokens: 256,
+        input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }] }]
+      });
+      const parsed = parseJsonLoose(content, {});
+      if (parsed?.mood) {
+        moodData = {
+          mood: parsed.mood,
+          genre: parsed.genre || '',
+          message: parsed.message || '',
+          generated_at: now.toISOString(),
+          source: 'ai'
+        };
+      }
+    } catch (modelError) {
+      console.warn('[scheduler] 情绪检查 AI 生成失败，改用本地回退:', modelError.message);
     }
+
+    if (!moodData?.mood) {
+      moodData = buildFallbackMood(now);
+    }
+
+    db.prepare('INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)').run('current_mood', JSON.stringify(moodData));
 
     schedulerStatus.moodCheck.lastRun = new Date().toISOString();
     schedulerStatus.moodCheck.status = 'idle';
-    console.log('情绪检查完成:', moodData.mood);
+    console.log('[scheduler] 情绪检查完成:', moodData.mood);
+    return moodData;
   } catch (err) {
     console.error('情绪检查失败:', err);
     schedulerStatus.moodCheck.status = 'error';
+    schedulerStatus.moodCheck.lastError = err.message;
+    throw err;
   }
+}
+
+// 每日歌单推荐（每天 07:00）
+cron.schedule('0 7 * * *', async () => {
+  try {
+    await generateDailyPlaylist({ force: true, trigger: 'cron' });
+  } catch {}
+});
+
+// 每小时情绪检查
+cron.schedule('0 * * * *', async () => {
+  try {
+    await generateMoodCheck({ force: true, trigger: 'cron' });
+  } catch {}
 });
 
 // ========== 定时任务 API ==========
@@ -781,21 +1191,52 @@ app.get('/api/scheduler/status', (req, res) => {
   res.json(schedulerStatus);
 });
 
-app.get('/api/scheduler/daily-playlist', (req, res) => {
-  const playlist = db.prepare("SELECT * FROM playlists WHERE type = 'daily' ORDER BY created_at DESC LIMIT 1").get();
-  if (!playlist) return res.json(null);
-  const songs = db.prepare('SELECT * FROM playlist_songs WHERE playlist_id = ? ORDER BY sort_order').all(playlist.id);
-  res.json({ ...playlist, songs });
+app.get('/api/scheduler/daily-playlist', async (req, res) => {
+  try {
+    const refresh = req.query.refresh === '1';
+    const payload = refresh
+      ? await generateDailyPlaylist({ force: true, trigger: 'request-refresh' })
+      : await generateDailyPlaylist({ force: false, trigger: 'request' });
+    res.json(payload || null);
+  } catch (err) {
+    res.status(500).json({ error: err.message || '今日推荐生成失败' });
+  }
 });
 
-app.get('/api/scheduler/mood', (req, res) => {
-  const mood = db.prepare("SELECT value FROM preferences WHERE key = 'current_mood'").get();
-  res.json(mood ? JSON.parse(mood.value) : null);
+app.get('/api/scheduler/mood', async (req, res) => {
+  try {
+    const refresh = req.query.refresh === '1';
+    const payload = refresh
+      ? await generateMoodCheck({ force: true, trigger: 'request-refresh' })
+      : await generateMoodCheck({ force: false, trigger: 'request' });
+    res.json(payload || null);
+  } catch (err) {
+    res.status(500).json({ error: err.message || '情绪检测失败' });
+  }
 });
 
 app.post('/api/scheduler/trigger/:task', async (req, res) => {
-  // 手动触发（调试用）
-  res.json({ ok: true, message: `任务 ${req.params.task} 已触发` });
+  try {
+    const task = String(req.params.task || '').toLowerCase();
+    if (task === 'daily' || task === 'daily-playlist') {
+      const playlist = await generateDailyPlaylist({ force: true, trigger: 'manual-trigger' });
+      return res.json({ ok: true, task, playlist });
+    }
+    if (task === 'mood' || task === 'mood-check') {
+      const mood = await generateMoodCheck({ force: true, trigger: 'manual-trigger' });
+      return res.json({ ok: true, task, mood });
+    }
+    if (task === 'all') {
+      const [playlist, mood] = await Promise.all([
+        generateDailyPlaylist({ force: true, trigger: 'manual-trigger-all' }),
+        generateMoodCheck({ force: true, trigger: 'manual-trigger-all' })
+      ]);
+      return res.json({ ok: true, task, playlist, mood });
+    }
+    return res.status(400).json({ error: '未知任务，只支持 daily-playlist / mood / all' });
+  } catch (err) {
+    res.status(500).json({ error: err.message || '任务触发失败' });
+  }
 });
 
 const https = require('https');

@@ -1,471 +1,1329 @@
+/*
+  player.css —— 新手学习版详细注释
+  说明：
+  1. 我保留了原来的样式功能，只补充更适合初学者阅读的中文注释。
+  2. 我尽量做到“每个选择器讲清楚、每条关键属性讲用途”。
+  3. 如果你想学得更扎实，建议优先看选择器注释，再看每条属性注释。
+*/
+
 /* public/css/player.css */
+/* 下面开始给选择器 .player-section 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .player-section {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1;
+  /* 设置元素允许的最小高度。 这里写成 0。 */
   min-height: 0;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
+  display: flex;
+  /* 设置 flex 主轴方向，决定子元素是横排还是竖排。 这里写成 column。 */
+  flex-direction: column;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 10px 20px 20px。 */
+  padding: 10px 20px 20px;
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
+  overflow: hidden;
+  /* 设置属性变化时的过渡动画。 这里写成 flex 0.35s cubic-bezier(0.4, 0, 0.2, 1)。 */
+  transition:
+    flex 0.82s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.82s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.82s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.82s cubic-bezier(0.22, 1, 0.36, 1);
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 relative。 */
+  position: relative;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+/* 这一行表示当前这组样式写完了。 */
+}
+
+.player-back-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+  display: none;
+  place-items: center;
+  cursor: pointer;
+  z-index: 3;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition:
+    background 0.22s ease,
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    opacity 0.32s ease;
+}
+
+.player-back-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.18);
+  transform: translateX(-1px);
+}
+
+.player-mood-bubble {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translate(-50%, -12px);
+  width: min(78%, 340px);
+  padding: 14px 18px 16px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(17, 18, 24, 0.78), rgba(17, 18, 24, 0.48));
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    0 18px 42px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
-  padding: 10px 20px 20px;
-  overflow: hidden;
-  transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-.player-section.collapsed {
-  flex: 0;
-  min-height: 0;
-  padding: 0;
-  overflow: hidden;
-  pointer-events: none;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 2;
+  transition:
+    opacity 0.46s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.46s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.46s ease;
+}
+
+.player-mood-bubble.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.player-mood-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(245, 236, 214, 0.16), rgba(182, 157, 115, 0.18));
+  border: 1px solid rgba(236, 220, 189, 0.14);
+  color: rgba(255, 245, 228, 0.94);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 8px 18px rgba(0,0,0,0.14);
+}
+
+.player-mood-text {
+  color: rgba(255,248,238,0.88);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.18);
+}
+/* 下面开始给选择器 .player-section.collapsed 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.player-section.collapsed {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 0。 */
+  flex: 0;
+  /* 设置元素允许的最小高度。 这里写成 0。 */
+  min-height: 0;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 0。 */
+  padding: 0;
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
+  overflow: hidden;
+  /* 控制元素是否接收鼠标或触摸事件。 这里写成 none。 */
+  pointer-events: none;
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 0。 */
+  opacity: 0;
+  transform: translateY(-18px) scale(0.985);
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 迷你播放器 */
+/* 下面开始给选择器 .mini-player 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .mini-player {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 none。 */
   display: none;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
   align-items: center;
+  /* 设置子元素之间的间距。 这里写成 10px。 */
   gap: 10px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 8px 16px。 */
   padding: 8px 16px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.06)。 */
   background: rgba(255,255,255,0.06);
+  /* 对元素背后的区域做模糊或调色，常用于毛玻璃效果。 这里写成 blur(20px)。 */
   backdrop-filter: blur(20px);
+  /* 给 WebKit 浏览器补充毛玻璃兼容写法。 这里写成 blur(20px)。 */
   -webkit-backdrop-filter: blur(20px);
+  /* 设置下边框。 这里写成 1px solid rgba(255,255,255,0.04)。 */
   border-bottom: 1px solid rgba(255,255,255,0.04);
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 relative。 */
   position: relative;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
-  transition: background 0.15s;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.15s。 */
+  transition:
+    background 0.2s ease,
+    opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0;
+  transform: translateY(16px);
+/* 这一行表示当前这组样式写完了。 */
 }
-.mini-player:hover { background: rgba(255,255,255,0.1); }
-.mini-player.show { display: flex; }
+/* 下面开始给选择器 .mini-player:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.mini-player:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.1)。 */
+  background: rgba(255,255,255,0.1);
+}
+/* 下面开始给选择器 .mini-player.show 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.mini-player.show {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+/* 下面开始给选择器 .mini-cover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .mini-cover {
+  /* 设置元素宽度。 这里写成 36px; height: 36px。 */
   width: 36px; height: 36px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 6px。 */
   border-radius: 6px;
+  /* 设置图片或视频如何填充容器。 这里写成 cover。 */
   object-fit: cover;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .mini-info 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .mini-info {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1;
+  /* 设置元素允许的最小宽度。 这里写成 0。 */
   min-width: 0;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .mini-title 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .mini-title {
+  /* 设置字号大小。 这里写成 13px。 */
   font-size: 13px;
+  /* 设置字重，也就是文字粗细。 这里写成 500。 */
   font-weight: 500;
+  /* 控制文本是否换行。 这里写成 nowrap。 */
   white-space: nowrap;
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
   overflow: hidden;
+  /* 控制超长文本如何显示，比如省略号。 这里写成 ellipsis。 */
   text-overflow: ellipsis;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .mini-ctrl 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .mini-ctrl {
+  /* 设置元素宽度。 这里写成 32px; height: 32px。 */
   width: 32px; height: 32px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 none。 */
   border: none;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 none。 */
   background: none;
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
   color: var(--text-primary);
+  /* 设置字号大小。 这里写成 16px。 */
   font-size: 16px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
   display: grid; place-items: center;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.12s。 */
   transition: background 0.12s;
+/* 这一行表示当前这组样式写完了。 */
 }
-.mini-ctrl:hover { background: rgba(255,255,255,0.1); }
+/* 下面开始给选择器 .mini-ctrl:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.mini-ctrl:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.1)。 */
+  background: rgba(255,255,255,0.1);
+}
+/* 下面开始给选择器 .mini-progress 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .mini-progress {
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 absolute。 */
   position: absolute;
+  /* 设置元素距离下边的偏移量。 这里写成 0; left: 0; right: 0。 */
   bottom: 0; left: 0; right: 0;
+  /* 设置元素高度。 这里写成 2px。 */
   height: 2px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.08)。 */
   background: rgba(255,255,255,0.08);
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .mini-progress-fill 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .mini-progress-fill {
+  /* 设置元素高度。 这里写成 100%。 */
   height: 100%;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--color-primary)。 */
   background: var(--color-primary);
+  /* 设置元素宽度。 这里写成 0%。 */
   width: 0%;
+  /* 设置属性变化时的过渡动画。 这里写成 width 0.3s linear。 */
   transition: width 0.3s linear;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .cover-container 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-container {
+  /* 设置元素宽度。 这里写成 220px。 */
   width: 220px;
+  /* 设置元素高度。 这里写成 220px。 */
   height: 220px;
+  /* 设置元素外边距，也就是元素和外部之间的距离。 这里写成 0 auto 12px。 */
   margin: 0 auto 12px;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+  /* 设置 3D 透视距离，让翻转效果更有空间感。 这里写成 1000px。 */
   perspective: 1000px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .cover-container.flipped 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-container.flipped {
+  /* 设置元素宽度。 这里写成 100%。 */
   width: 100%;
+  /* 设置元素高度。 这里写成 100%。 */
   height: 100%;
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .cover-flipper 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-flipper {
+  /* 设置元素宽度。 这里写成 100%。 */
   width: 100%;
+  /* 设置元素高度。 这里写成 100%。 */
   height: 100%;
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 relative。 */
   position: relative;
+  /* 控制 3D 变换时子元素是否保留立体效果。 这里写成 preserve-3d。 */
   transform-style: preserve-3d;
+  /* 设置属性变化时的过渡动画。 这里写成 transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)。 */
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .cover-flipper.flipped 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-flipper.flipped {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 rotateY(180deg)。 */
   transform: rotateY(180deg);
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .cover-front, .cover-back 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-front, .cover-back {
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 absolute。 */
   position: absolute;
+  /* 同时设置 top、right、bottom、left，让元素四边一起贴齐。 这里写成 0。 */
   inset: 0;
+  /* 控制元素背面朝向用户时是否可见。 这里写成 hidden。 */
   backface-visibility: hidden;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 var(--radius-lg)。 */
   border-radius: var(--radius-lg);
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
   overflow: hidden;
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .cover-front 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-front {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--bg-card)。 */
   background: var(--bg-card);
   box-shadow:
     0 20px 60px -15px rgba(0,0,0,0.5),
     0 0 0 1px var(--border-subtle);
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .cover-front img 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-front img {
+  /* 设置元素宽度。 这里写成 100%。 */
   width: 100%;
+  /* 设置元素高度。 这里写成 100%。 */
   height: 100%;
+  /* 设置图片或视频如何填充容器。 这里写成 cover。 */
   object-fit: cover;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 block。 */
   display: block;
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 下面开始给选择器 .cover-back 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-back {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 rotateY(180deg)。 */
   transform: rotateY(180deg);
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--bg-card)。 */
   background: var(--bg-card);
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 20px。 */
   padding: 20px;
+  /* 控制纵向溢出的处理方式。 这里写成 auto。 */
   overflow-y: auto;
+  /* 设置 Firefox 浏览器滚动条显示方式。 这里写成 none。 */
   scrollbar-width: none;
+/* 这一行表示当前这组样式写完了。 */
 }
-.cover-back::-webkit-scrollbar { display: none; }
+/* 下面开始给选择器 .cover-back::-webkit-scrollbar 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.cover-back::-webkit-scrollbar {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 none。 */
+  display: none;
+}
 
 /* 律动光效 */
+/* 下面开始给选择器 .cover-glow 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-glow {
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 absolute。 */
   position: absolute;
+  /* 同时设置 top、right、bottom、left，让元素四边一起贴齐。 这里写成 -4px。 */
   inset: -4px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 calc(var(--radius-lg) + 4px)。 */
   border-radius: calc(var(--radius-lg) + 4px);
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 0。 */
   opacity: 0;
+  /* 设置属性变化时的过渡动画。 这里写成 opacity 0.3s。 */
   transition: opacity 0.3s;
+  /* 控制元素是否接收鼠标或触摸事件。 这里写成 none。 */
   pointer-events: none;
+  /* 设置层叠顺序，数值越大越容易显示在上层。 这里写成 -1。 */
   z-index: -1;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .cover-glow.active 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .cover-glow.active {
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 1。 */
   opacity: 1;
+  /* 设置阴影，用来制造层次感或发光效果。 这里写成 0 0 30px 8px var(--color-primary)。 */
   box-shadow: 0 0 30px 8px var(--color-primary);
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 播放控制区 */
+/* 下面开始给选择器 .player-controls 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .player-controls {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 设置 flex 主轴方向，决定子元素是横排还是竖排。 这里写成 column。 */
   flex-direction: column;
+  /* 设置子元素之间的间距。 这里写成 12px。 */
+  gap: 12px;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+#app.player-only .player-section {
+  justify-content: center;
+  padding: 22px 22px 26px;
+}
+
+#app.player-only .player-back-btn {
+  display: grid;
+}
+
+#app.player-only .cover-container {
+  width: min(66vw, 400px);
+  height: min(66vw, 400px);
+  margin: 56px auto 22px;
+}
+
+#app.player-only .player-mood-bubble {
+  top: 84px;
+  width: min(82%, 360px);
+}
+
+#app.player-only .player-controls {
+  width: min(100%, 460px);
+  margin: 0 auto;
+  gap: 18px;
+  padding: 22px 22px 18px;
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(10, 12, 18, 0.7), rgba(10, 12, 18, 0.38));
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 20px 44px rgba(0,0,0,0.28);
+}
+
+#app.player-only .song-title {
+  font-size: clamp(22px, 5vw, 30px);
+  line-height: 1.14;
+}
+
+#app.player-only .like-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  font-size: 22px;
+}
+
+#app.player-only .progress-bar {
+  margin-top: 2px;
   gap: 12px;
 }
 
-.player-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+#app.player-only .progress-time {
+  font-size: 13px;
+  min-width: 42px;
 }
 
-.song-title {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.2;
-  flex: 1;
-  margin-right: 12px;
+#app.player-only .progress-track {
+  height: 6px;
 }
 
-.like-btn {
-  width: 36px; height: 36px;
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 20px;
-  transition: color 0.15s, transform 0.15s;
-}
-.like-btn:hover { transform: scale(1.1); }
-.like-btn.liked { color: #e74c3c; }
-
-.progress-bar {
-  display: flex;
-  align-items: center;
+#app.player-only .control-buttons {
   gap: 8px;
+  justify-content: space-between;
+  padding: 0;
 }
 
-.progress-time {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-  min-width: 36px;
-}
-
-.progress-track {
-  flex: 1;
-  height: 4px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 999px;
-  cursor: pointer;
-  position: relative;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--text-primary);
-  border-radius: 999px;
-  width: 0%;
-  transition: width 0.1s linear;
-}
-
-.control-buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-}
-
-.ctrl-btn {
-  width: 40px; height: 40px;
+#app.player-only .ctrl-btn {
+  width: 64px;
+  height: 64px;
+  font-size: 26px;
+  background: transparent;
   border: none;
-  background: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  font-size: 18px;
-  transition: background 0.15s, transform 0.1s;
+  color: rgba(255,255,255,0.92);
 }
-.ctrl-btn:hover { background: rgba(255,255,255,0.1); }
-.ctrl-btn:active { transform: scale(0.92); }
-.ctrl-btn.active { color: var(--color-accent); }
 
-.play-btn {
-  width: 52px; height: 52px;
-  background: var(--text-primary);
-  color: var(--bg-base);
-  font-size: 22px;
+#app.player-only .ctrl-btn:hover {
+  background: rgba(255,255,255,0.045);
 }
-.play-btn:hover { background: var(--text-primary); transform: scale(1.04); }
+
+#app.player-only .play-btn {
+  width: 96px;
+  height: 96px;
+  font-size: 32px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+#app.player-only .volume-bar {
+  margin-top: 4px;
+  padding: 0 6px;
+  gap: 12px;
+}
+
+#app.player-only .volume-icon {
+  min-width: 28px;
+}
+
+#app.player-only .volume-slider {
+  height: 6px;
+}
+
+#app.player-only .volume-slider::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+}
+
+#app.player-only .volume-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+}
+
+#app.player-only .queue-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  border: none;
+  color: rgba(255,255,255,0.92);
+}
+
+#app.player-only .queue-count {
+  top: -2px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  font-size: 10px;
+  padding: 0 5px;
+}
+
+/* 下面开始给选择器 .player-info 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.player-info {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
+  display: flex;
+  /* 控制 flex 主轴方向上的对齐方式。 这里写成 space-between。 */
+  justify-content: space-between;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
+  align-items: center;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .song-title 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.song-title {
+  /* 设置字号大小。 这里写成 18px。 */
+  font-size: 18px;
+  /* 设置字重，也就是文字粗细。 这里写成 600。 */
+  font-weight: 600;
+  /* 设置行高，影响文字上下留白。 这里写成 1.2。 */
+  line-height: 1.2;
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
+  flex: 1;
+  /* 设置右外边距。 这里写成 12px。 */
+  margin-right: 12px;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .like-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.like-btn {
+  /* 设置元素宽度。 这里写成 36px; height: 36px。 */
+  width: 36px; height: 36px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 none。 */
+  border: none;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 none。 */
+  background: none;
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
+  color: var(--text-muted);
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
+  cursor: pointer;
+  /* 设置字号大小。 这里写成 20px。 */
+  font-size: 20px;
+  /* 设置属性变化时的过渡动画。 这里写成 color 0.15s, transform 0.15s。 */
+  transition: color 0.15s, transform 0.15s;
+/* 这一行表示当前这组样式写完了。 */
+}
+.icon-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.like-icon-img {
+  width: 24px;
+  height: 24px;
+  margin: auto;
+  opacity: 0.94;
+}
+
+.like-btn.liked .like-icon-img {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 214, 117, 0.18));
+}
+/* 下面开始给选择器 .like-btn:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.like-btn:hover {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 scale(1.1)。 */
+  transform: scale(1.1);
+}
+/* 下面开始给选择器 .like-btn.liked 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.like-btn.liked {
+  /* 设置文字颜色。 这里写成 #e74c3c。 */
+  color: #e74c3c;
+}
+
+/* 下面开始给选择器 .progress-bar 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.progress-bar {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
+  display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
+  align-items: center;
+  /* 设置子元素之间的间距。 这里写成 8px。 */
+  gap: 8px;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .progress-time 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.progress-time {
+  /* 设置字号大小。 这里写成 11px。 */
+  font-size: 11px;
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
+  color: var(--text-muted);
+  /* 设置数字显示风格，比如等宽数字。 这里写成 tabular-nums。 */
+  font-variant-numeric: tabular-nums;
+  /* 设置元素允许的最小宽度。 这里写成 36px。 */
+  min-width: 36px;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .progress-track 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.progress-track {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
+  flex: 1;
+  /* 设置元素高度。 这里写成 4px。 */
+  height: 4px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.15)。 */
+  background: rgba(255,255,255,0.15);
+  /* 设置圆角，让元素边缘更柔和。 这里写成 999px。 */
+  border-radius: 999px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
+  cursor: pointer;
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 relative。 */
+  position: relative;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .progress-fill 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.progress-fill {
+  /* 设置元素高度。 这里写成 100%。 */
+  height: 100%;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--text-primary)。 */
+  background: var(--text-primary);
+  /* 设置圆角，让元素边缘更柔和。 这里写成 999px。 */
+  border-radius: 999px;
+  /* 设置元素宽度。 这里写成 0%。 */
+  width: 0%;
+  /* 设置属性变化时的过渡动画。 这里写成 width 0.1s linear。 */
+  transition: width 0.1s linear;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .control-buttons 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.control-buttons {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
+  display: flex;
+  /* 控制 flex 主轴方向上的对齐方式。 这里写成 center。 */
+  justify-content: center;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
+  align-items: center;
+  /* 设置子元素之间的间距。 这里写成 24px。 */
+  gap: 24px;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .ctrl-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.ctrl-btn {
+  /* 设置元素宽度。 这里写成 40px; height: 40px。 */
+  width: 40px; height: 40px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid rgba(255,255,255,0.06)。 */
+  border: 1px solid rgba(255,255,255,0.06);
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.04)。 */
+  background: rgba(255,255,255,0.04);
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
+  color: var(--text-primary);
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
+  cursor: pointer;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
+  border-radius: 50%;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
+  display: grid; place-items: center;
+  /* 设置字号大小。 这里写成 18px。 */
+  font-size: 18px;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.15s, transform 0.1s, color 0.15s, border-color 0.15s。 */
+  transition: background 0.15s, transform 0.1s, color 0.15s, border-color 0.15s;
+/* 这一行表示当前这组样式写完了。 */
+}
+.ctrl-btn .icon-img {
+  width: 29px;
+  height: 29px;
+  opacity: 0.92;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.04));
+}
+
+.ctrl-btn svg {
+  width: 56%;
+  height: 56%;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* 下面开始给选择器 .ctrl-btn:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.ctrl-btn:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.1)。 */
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.12);
+}
+/* 下面开始给选择器 .ctrl-btn:active 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.ctrl-btn:active {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 scale(0.92)。 */
+  transform: scale(0.92);
+}
+/* 下面开始给选择器 .ctrl-btn.active 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.ctrl-btn.active {
+  /* 设置文字颜色。 这里写成 var(--color-accent)。 */
+  color: var(--color-accent);
+}
+
+.ctrl-btn.active .icon-img {
+  opacity: 1;
+  filter:
+    drop-shadow(0 0 8px rgba(255, 214, 117, 0.12))
+    drop-shadow(0 1px 0 rgba(255,255,255,0.08));
+}
+
+/* 下面开始给选择器 .play-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.play-btn {
+  /* 设置元素宽度。 这里写成 52px; height: 52px。 */
+  width: 52px; height: 52px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--text-primary)。 */
+  background: var(--text-primary);
+  /* 设置文字颜色。 这里写成 var(--bg-base)。 */
+  color: var(--bg-base);
+  /* 设置字号大小。 这里写成 22px。 */
+  font-size: 22px;
+  border-color: transparent;
+/* 这一行表示当前这组样式写完了。 */
+}
+.play-btn .play-icon-img {
+  width: 84px;
+  height: 84px;
+  opacity: 1;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.16));
+}
+
+.play-btn svg {
+  width: 40%;
+  height: 40%;
+  stroke: none;
+  fill: currentColor;
+}
+/* 下面开始给选择器 .play-btn:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.play-btn:hover {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 scale(1.04)。 */
+  transform: scale(1.04);
+}
+
+.ctrl-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: currentColor;
+  color: var(--bg-base);
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
 
 /* 音量条 */
+/* 下面开始给选择器 .volume-bar 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .volume-bar {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
   align-items: center;
+  /* 设置子元素之间的间距。 这里写成 8px。 */
   gap: 8px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 0 12px。 */
   padding: 0 12px;
+  /* 设置上外边距。 这里写成 6px。 */
   margin-top: 6px;
+/* 这一行表示当前这组样式写完了。 */
 }
 
+/* 开始一个媒体查询：只有满足这个屏幕条件时，里面的样式才会生效。 */
 @media (max-height: 520px) {
+/* 下面开始给选择器 .player-section 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .player-section {
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 8px 16px 12px。 */
     padding: 8px 16px 12px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
+/* 下面开始给选择器 .cover-container 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .cover-container {
+  /* 设置元素宽度。 这里写成 160px。 */
     width: 160px;
+  /* 设置元素高度。 这里写成 160px。 */
     height: 160px;
+  /* 设置下外边距。 这里写成 8px。 */
     margin-bottom: 8px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
+/* 下面开始给选择器 .player-controls 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .player-controls {
+  /* 设置子元素之间的间距。 这里写成 8px。 */
     gap: 8px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
+/* 下面开始给选择器 .song-title 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .song-title {
+  /* 设置字号大小。 这里写成 16px。 */
     font-size: 16px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
+/* 下面开始给选择器 .control-buttons 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .control-buttons {
+  /* 设置子元素之间的间距。 这里写成 16px。 */
     gap: 16px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
+/* 下面开始给选择器 .ctrl-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
   .ctrl-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 16px;
-  }
-
-  .play-btn {
+  /* 设置元素宽度。 这里写成 34px。 */
     width: 44px;
+  /* 设置元素高度。 这里写成 34px。 */
     height: 44px;
-    font-size: 18px;
+  /* 设置字号大小。 这里写成 16px。 */
+    font-size: 16px;
+/* 这一行表示当前这组样式写完了。 */
   }
 
-  .volume-bar {
-    margin-top: 2px;
-    padding: 0 4px;
+/* 下面开始给选择器 .play-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+  .play-btn {
+  /* 设置元素宽度。 这里写成 44px。 */
+    width: 64px;
+  /* 设置元素高度。 这里写成 44px。 */
+    height: 64px;
+  /* 设置字号大小。 这里写成 18px。 */
+    font-size: 18px;
+/* 这一行表示当前这组样式写完了。 */
   }
+
+/* 下面开始给选择器 .volume-bar 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+  .volume-bar {
+  /* 设置上外边距。 这里写成 2px。 */
+    margin-top: 2px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 0 4px。 */
+    padding: 0 4px;
+/* 这一行表示当前这组样式写完了。 */
+  }
+
+  .ctrl-btn .icon-img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .play-btn .play-icon-img {
+    width: 58px;
+    height: 58px;
+  }
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .volume-icon 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .volume-icon {
+  /* 设置字号大小。 这里写成 16px。 */
   font-size: 16px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 控制文字或元素是否允许被选中。 这里写成 none。 */
   user-select: none;
+  /* 设置元素允许的最小宽度。 这里写成 20px。 */
   min-width: 20px;
+  /* 设置文字的水平对齐方式。 这里写成 center。 */
   text-align: center;
+  display: grid;
+  place-items: center;
+/* 这一行表示当前这组样式写完了。 */
 }
+
+.volume-icon-img {
+  width: 26px;
+  height: 26px;
+  opacity: 0.86;
+}
+/* 下面开始给选择器 .volume-slider 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .volume-slider {
+  /* 给 WebKit 浏览器补充默认外观控制。 这里写成 none。 */
   -webkit-appearance: none;
+  /* 移除或调整浏览器默认外观。 这里写成 none。 */
   appearance: none;
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
   flex: 1;
+  /* 设置元素高度。 这里写成 4px。 */
   height: 4px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 2px。 */
   border-radius: 2px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.15)。 */
   background: rgba(255,255,255,0.15);
+  /* 设置轮廓线，常用于焦点态。 这里写成 none。 */
   outline: none;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .volume-slider::-webkit-slider-thumb 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .volume-slider::-webkit-slider-thumb {
+  /* 给 WebKit 浏览器补充默认外观控制。 这里写成 none。 */
   -webkit-appearance: none;
+  /* 移除或调整浏览器默认外观。 这里写成 none。 */
   appearance: none;
+  /* 设置元素宽度。 这里写成 14px; height: 14px。 */
   width: 14px; height: 14px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--text-primary)。 */
   background: var(--text-primary);
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置属性变化时的过渡动画。 这里写成 transform 0.12s。 */
   transition: transform 0.12s;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .volume-slider::-webkit-slider-thumb:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .volume-slider::-webkit-slider-thumb:hover {
+  /* 对元素进行位移、缩放、旋转等变形。 这里写成 scale(1.25)。 */
   transform: scale(1.25);
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .volume-slider::-moz-range-thumb 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .volume-slider::-moz-range-thumb {
+  /* 设置元素宽度。 这里写成 14px; height: 14px。 */
   width: 14px; height: 14px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--text-primary)。 */
   background: var(--text-primary);
+  /* 设置边框的粗细、样式和颜色。 这里写成 none。 */
   border: none;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 顶部菜单下拉 */
+/* 下面开始给选择器 .topbar-menu 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .topbar-menu {
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 absolute。 */
   position: absolute;
+  /* 设置元素距离上边的偏移量。 这里写成 48px。 */
   top: 48px;
+  /* 设置元素距离右边的偏移量。 这里写成 12px。 */
   right: 12px;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--bg-card, rgba(30,30,30,0.95))。 */
   background: var(--bg-card, rgba(30,30,30,0.95));
+  /* 设置圆角，让元素边缘更柔和。 这里写成 12px。 */
   border-radius: 12px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 6px 0。 */
   padding: 6px 0;
+  /* 设置元素允许的最小宽度。 这里写成 160px。 */
   min-width: 160px;
+  /* 设置阴影，用来制造层次感或发光效果。 这里写成 0 8px 32px rgba(0,0,0,0.4)。 */
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  /* 对元素背后的区域做模糊或调色，常用于毛玻璃效果。 这里写成 blur(20px)。 */
   backdrop-filter: blur(20px);
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid rgba(255,255,255,0.08)。 */
   border: 1px solid rgba(255,255,255,0.08);
+  /* 设置层叠顺序，数值越大越容易显示在上层。 这里写成 200。 */
   z-index: 200;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 none。 */
   display: none;
+/* 这一行表示当前这组样式写完了。 */
 }
-.topbar-menu.show { display: block; }
-.topbar-menu-item {
+/* 下面开始给选择器 .topbar-menu.show 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.topbar-menu.show {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 block。 */
   display: block;
-  width: 100%;
-  padding: 10px 16px;
-  border: none;
-  background: none;
-  color: var(--text-primary);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.12s;
 }
+/* 下面开始给选择器 .topbar-menu-item 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.topbar-menu-item {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 block。 */
+  display: block;
+  /* 设置元素宽度。 这里写成 100%。 */
+  width: 100%;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 10px 16px。 */
+  padding: 10px 16px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 none。 */
+  border: none;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 none。 */
+  background: none;
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
+  color: var(--text-primary);
+  /* 设置字号大小。 这里写成 13px。 */
+  font-size: 13px;
+  /* 设置文字的水平对齐方式。 这里写成 left。 */
+  text-align: left;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
+  cursor: pointer;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.12s。 */
+  transition: background 0.12s;
+/* 这一行表示当前这组样式写完了。 */
+}
+/* 下面开始给选择器 .topbar-menu-item:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .topbar-menu-item:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.08)。 */
   background: rgba(255,255,255,0.08);
+/* 这一行表示当前这组样式写完了。 */
 }
 
 /* 播放列表按钮 */
+/* 下面开始给选择器 .queue-btn 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .queue-btn {
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 relative。 */
   position: relative;
+  /* 设置元素宽度。 这里写成 32px; height: 32px。 */
   width: 32px; height: 32px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 none。 */
   border: none;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 none。 */
   background: none;
+  /* 设置文字颜色。 这里写成 var(--text-secondary)。 */
   color: var(--text-secondary);
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
   display: grid; place-items: center;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 6px。 */
   border-radius: 6px;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+  /* 设置属性变化时的过渡动画。 这里写成 color 0.15s, background 0.15s。 */
   transition: color 0.15s, background 0.15s;
-}
-.queue-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.08); }
-.queue-count {
-  position: absolute;
-  top: 2px; right: 0;
-  font-size: 9px;
-  font-weight: 600;
-  background: var(--color-accent);
-  color: #fff;
-  min-width: 14px; height: 14px;
-  border-radius: 7px;
-  display: grid; place-items: center;
-  padding: 0 3px;
-  line-height: 1;
-}
-.queue-count:empty, .queue-count[data-count="0"] { display: none; }
-
-.queue-panel-header-main {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+/* 这一行表示当前这组样式写完了。 */
 }
 
-.queue-panel-clear {
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: rgba(255,255,255,0.04);
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+.queue-btn svg {
+  opacity: 0.82;
 }
-
-.queue-panel-clear:hover {
-  background: rgba(255,255,255,0.08);
+/* 下面开始给选择器 .queue-btn:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-btn:hover {
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
   color: var(--text-primary);
-  border-color: rgba(255,255,255,0.16);
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.08)。 */
+  background: rgba(255,255,255,0.08);
+}
+/* 下面开始给选择器 .queue-count 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-count {
+  /* 设置定位方式，决定元素如何参与页面布局。 这里写成 absolute。 */
+  position: absolute;
+  /* 设置元素距离上边的偏移量。 这里写成 2px; right: 0。 */
+  top: 2px; right: 0;
+  /* 设置字号大小。 这里写成 9px。 */
+  font-size: 9px;
+  /* 设置字重，也就是文字粗细。 这里写成 600。 */
+  font-weight: 600;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 var(--color-accent)。 */
+  background: var(--color-accent);
+  /* 设置文字颜色。 这里写成 #fff。 */
+  color: #fff;
+  /* 设置元素允许的最小宽度。 这里写成 14px; height: 14px。 */
+  min-width: 14px; height: 14px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 7px。 */
+  border-radius: 7px;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
+  display: grid; place-items: center;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 0 3px。 */
+  padding: 0 3px;
+  /* 设置行高，影响文字上下留白。 这里写成 1。 */
+  line-height: 1;
+/* 这一行表示当前这组样式写完了。 */
+}
+/* 下面开始给选择器 .queue-count:empty, .queue-count[data-count="0"] 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-count:empty, .queue-count[data-count="0"] {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 none。 */
+  display: none;
 }
 
+/* 下面开始给选择器 .queue-panel-header-main 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-panel-header-main {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
+  display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
+  align-items: center;
+  /* 设置子元素之间的间距。 这里写成 10px。 */
+  gap: 10px;
+  /* 设置元素允许的最小宽度。 这里写成 0。 */
+  min-width: 0;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .queue-panel-clear 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-panel-clear {
+  /* 设置元素高度。 这里写成 28px。 */
+  height: 28px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 0 10px。 */
+  padding: 0 10px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 999px。 */
+  border-radius: 999px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 1px solid var(--border-subtle)。 */
+  border: 1px solid var(--border-subtle);
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.04)。 */
+  background: rgba(255,255,255,0.04);
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
+  color: var(--text-muted);
+  /* 设置字号大小。 这里写成 12px。 */
+  font-size: 12px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
+  cursor: pointer;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s。 */
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .queue-panel-clear:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-panel-clear:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.08)。 */
+  background: rgba(255,255,255,0.08);
+  /* 设置文字颜色。 这里写成 var(--text-primary)。 */
+  color: var(--text-primary);
+  /* 单独设置边框颜色。 这里写成 rgba(255,255,255,0.16)。 */
+  border-color: rgba(255,255,255,0.16);
+/* 这一行表示当前这组样式写完了。 */
+}
+
+/* 下面开始给选择器 .queue-panel-clear:disabled 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .queue-panel-clear:disabled {
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 0.35。 */
   opacity: 0.35;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 default。 */
   cursor: default;
+/* 这一行表示当前这组样式写完了。 */
+}
+
+#queuePanel .panel-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.18) rgba(255,255,255,0.03);
+}
+
+#queuePanel .panel-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+#queuePanel .panel-content::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.03);
+  border-radius: 999px;
+}
+
+#queuePanel .panel-content::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#queuePanel .panel-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.26);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 /* 播放列表面板内歌曲行 */
+/* 下面开始给选择器 .queue-item 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .queue-item {
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 flex。 */
   display: flex;
+  /* 控制 flex 交叉轴方向上的对齐方式。 这里写成 center。 */
   align-items: center;
+  /* 设置子元素之间的间距。 这里写成 10px。 */
   gap: 10px;
+  /* 设置元素内边距，也就是内容和边框之间的距离。 这里写成 10px 20px。 */
   padding: 10px 20px;
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置属性变化时的过渡动画。 这里写成 background 0.12s。 */
   transition: background 0.12s;
+/* 这一行表示当前这组样式写完了。 */
 }
-.queue-item:hover { background: rgba(255,255,255,0.05); }
-.queue-item.playing { background: rgba(74,108,247,0.12); }
-.queue-item.playing .queue-item-name { color: var(--color-primary); }
+/* 下面开始给选择器 .queue-item:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-item:hover {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(255,255,255,0.05)。 */
+  background: rgba(255,255,255,0.05);
+}
+/* 下面开始给选择器 .queue-item.playing 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-item.playing {
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 rgba(74,108,247,0.12)。 */
+  background: rgba(74,108,247,0.12);
+}
+/* 下面开始给选择器 .queue-item.playing .queue-item-name 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-item.playing .queue-item-name {
+  /* 设置文字颜色。 这里写成 var(--color-primary)。 */
+  color: var(--color-primary);
+}
+/* 下面开始给选择器 .queue-item-cover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .queue-item-cover {
+  /* 设置元素宽度。 这里写成 36px; height: 36px。 */
   width: 36px; height: 36px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 6px。 */
   border-radius: 6px;
+  /* 设置图片或视频如何填充容器。 这里写成 cover。 */
   object-fit: cover;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+/* 这一行表示当前这组样式写完了。 */
 }
-.queue-item-info { flex: 1; min-width: 0; }
+/* 下面开始给选择器 .queue-item-info 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-item-info {
+  /* 在 flex 布局中设置元素如何伸缩和分配剩余空间。 这里写成 1。 */
+  flex: 1;
+  /* 设置元素允许的最小宽度。 这里写成 0。 */
+  min-width: 0;
+}
+/* 下面开始给选择器 .queue-item-name 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .queue-item-name {
+  /* 设置字号大小。 这里写成 13px。 */
   font-size: 13px;
+  /* 设置字重，也就是文字粗细。 这里写成 500。 */
   font-weight: 500;
+  /* 控制文本是否换行。 这里写成 nowrap。 */
   white-space: nowrap;
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
   overflow: hidden;
+  /* 控制超长文本如何显示，比如省略号。 这里写成 ellipsis。 */
   text-overflow: ellipsis;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .queue-item-artist 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .queue-item-artist {
+  /* 设置字号大小。 这里写成 11px。 */
   font-size: 11px;
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
   color: var(--text-muted);
+  /* 控制文本是否换行。 这里写成 nowrap。 */
   white-space: nowrap;
+  /* 控制内容超出盒子时如何处理。 这里写成 hidden。 */
   overflow: hidden;
+  /* 控制超长文本如何显示，比如省略号。 这里写成 ellipsis。 */
   text-overflow: ellipsis;
+/* 这一行表示当前这组样式写完了。 */
 }
+/* 下面开始给选择器 .queue-item-remove 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
 .queue-item-remove {
+  /* 设置元素宽度。 这里写成 28px; height: 28px。 */
   width: 28px; height: 28px;
+  /* 设置边框的粗细、样式和颜色。 这里写成 none。 */
   border: none;
+  /* 设置背景，可以是纯色、渐变或图片。 这里写成 none。 */
   background: none;
+  /* 设置文字颜色。 这里写成 var(--text-muted)。 */
   color: var(--text-muted);
+  /* 设置鼠标悬停时显示的指针样式。 这里写成 pointer。 */
   cursor: pointer;
+  /* 设置字号大小。 这里写成 14px。 */
   font-size: 14px;
+  /* 设置圆角，让元素边缘更柔和。 这里写成 50%。 */
   border-radius: 50%;
+  /* 设置元素的布局模式，比如块级、弹性布局或网格布局。 这里写成 grid; place-items: center。 */
   display: grid; place-items: center;
+  /* 控制空间不足时元素是否允许被压缩。 这里写成 0。 */
   flex-shrink: 0;
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 0。 */
   opacity: 0;
+  /* 设置属性变化时的过渡动画。 这里写成 opacity 0.15s, color 0.15s。 */
   transition: opacity 0.15s, color 0.15s;
+/* 这一行表示当前这组样式写完了。 */
 }
-.queue-item:hover .queue-item-remove { opacity: 1; }
-.queue-item-remove:hover { color: var(--color-accent); }
+/* 下面开始给选择器 .queue-item:hover .queue-item-remove 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-item:hover .queue-item-remove {
+  /* 设置透明度，0 是完全透明，1 是完全不透明。 这里写成 1。 */
+  opacity: 1;
+}
+/* 下面开始给选择器 .queue-item-remove:hover 添加样式，也就是匹配这个选择器的元素都会应用下面这些规则。 */
+.queue-item-remove:hover {
+  /* 设置文字颜色。 这里写成 var(--color-accent)。 */
+  color: var(--color-accent);
+}

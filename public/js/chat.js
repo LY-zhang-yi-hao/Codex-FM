@@ -7,6 +7,16 @@ const chatMessages = $('chatMessages');
 const chatInput = $('chatInput');
 const sendBtn = $('sendBtn');
 
+const DEFAULT_AVATAR_SRC = {
+  assistant: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle fill='%234a6cf7' cx='16' cy='16' r='16'/%3E%3Ctext x='16' y='20' fill='%23fff' font-size='14' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E",
+  user: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle fill='%2355d99b' cx='16' cy='16' r='16'/%3E%3Ctext x='16' y='20' fill='%23081410' font-size='14' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E"
+};
+
+const AVATAR_STORAGE_KEYS = {
+  assistant: 'codexio_avatar_assistant',
+  user: 'codexio_avatar_user'
+};
+
 function scrollChatToBottom() {
   if (!chatMessages) return;
   const apply = () => {
@@ -34,9 +44,52 @@ function formatTime(s) {
 }
 
 const avatarSrc = {
-  assistant: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle fill='%234a6cf7' cx='16' cy='16' r='16'/%3E%3Ctext x='16' y='20' fill='%23fff' font-size='14' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E",
-  user: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle fill='%2355d99b' cx='16' cy='16' r='16'/%3E%3Ctext x='16' y='20' fill='%23081410' font-size='14' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E"
+  assistant: localStorage.getItem(AVATAR_STORAGE_KEYS.assistant) || DEFAULT_AVATAR_SRC.assistant,
+  user: localStorage.getItem(AVATAR_STORAGE_KEYS.user) || DEFAULT_AVATAR_SRC.user
 };
+
+function syncHeaderAvatar(role) {
+  const img = $(role === 'assistant' ? 'djAvatarImg' : 'userAvatarImg');
+  const label = $(role === 'assistant' ? 'djAvatarLabel' : 'userAvatarLabel');
+  const isCustom = !!localStorage.getItem(AVATAR_STORAGE_KEYS[role]);
+
+  if (!img || !label) return;
+
+  if (isCustom) {
+    img.src = avatarSrc[role];
+    img.classList.remove('is-hidden');
+    label.classList.add('is-hidden');
+  } else {
+    img.removeAttribute('src');
+    img.classList.add('is-hidden');
+    label.classList.remove('is-hidden');
+  }
+}
+
+function syncAllMessageAvatars(role) {
+  chatMessages?.querySelectorAll?.(`.msg.${role} .msg-avatar`)?.forEach((img) => {
+    img.src = avatarSrc[role];
+  });
+}
+
+export function setAvatar(role, src) {
+  avatarSrc[role] = src || DEFAULT_AVATAR_SRC[role];
+  if (src) localStorage.setItem(AVATAR_STORAGE_KEYS[role], src);
+  else localStorage.removeItem(AVATAR_STORAGE_KEYS[role]);
+  syncHeaderAvatar(role);
+  syncAllMessageAvatars(role);
+}
+
+export function getAvatar(role) {
+  return avatarSrc[role];
+}
+
+export function hasCustomAvatar(role) {
+  return !!localStorage.getItem(AVATAR_STORAGE_KEYS[role]);
+}
+
+syncHeaderAvatar('assistant');
+syncHeaderAvatar('user');
 
 function addMessage(role, content, extra = '') {
   const msg = document.createElement('div');
@@ -72,6 +125,65 @@ function renderVoiceMsg(text) {
       <span class="voice-text">${safe}</span>
     </div>
   `;
+}
+
+function extractStreamingJsonStringField(raw, fieldName) {
+  const keyIndex = raw.search(new RegExp(`"${fieldName}"\\s*:\\s*"`));
+  if (keyIndex === -1) return null;
+
+  const startMatch = new RegExp(`"${fieldName}"\\s*:\\s*"`).exec(raw.slice(keyIndex));
+  if (!startMatch) return null;
+
+  let i = keyIndex + startMatch[0].length;
+  let out = '';
+
+  while (i < raw.length) {
+    const ch = raw[i];
+
+    if (ch === '"') return out;
+
+    if (ch === '\\') {
+      const next = raw[i + 1];
+      if (next == null) break;
+
+      if (next === 'u') {
+        const hex = raw.slice(i + 2, i + 6);
+        if (!/^[0-9a-fA-F]{4}$/.test(hex)) break;
+        out += String.fromCharCode(parseInt(hex, 16));
+        i += 6;
+        continue;
+      }
+
+      const escapes = {
+        '"': '"',
+        '\\': '\\',
+        '/': '/',
+        b: '\b',
+        f: '\f',
+        n: '\n',
+        r: '\r',
+        t: '\t'
+      };
+      out += escapes[next] ?? next;
+      i += 2;
+      continue;
+    }
+
+    out += ch;
+    i += 1;
+  }
+
+  return out;
+}
+
+function getStreamingDisplayText(raw) {
+  const say = extractStreamingJsonStringField(raw, 'say');
+  if (say !== null) return say;
+
+  const trimmed = raw.trimStart();
+  if (trimmed && !trimmed.startsWith('{')) return raw;
+
+  return null;
 }
 
 async function sendMessage() {
@@ -136,11 +248,13 @@ async function sendMessage() {
 
           if (data.type === 'text') {
             fullText += data.text;
+            const previewText = getStreamingDisplayText(fullText);
+            if (previewText === null) continue;
             if (!assistantMsg) {
               typingMsg?.remove();
               assistantMsg = addMessage('assistant', '');
             }
-            assistantMsg.querySelector('.msg-bubble').textContent = fullText;
+            assistantMsg.querySelector('.msg-bubble').textContent = previewText;
             scrollChatToBottom();
           }
 
