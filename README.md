@@ -1,8 +1,9 @@
+
 <div align="center">
 
-<img src="docs/hero-banner.svg" alt="Claudio FM Hero Banner" width="100%" />
+<img src="docs/样式图.png" alt="Codex-FM Hero Banner" width="100%" />
 
-# Claudio FM
+# Codex-FM
 
 ### An immersive AI Radio web app for music, chat, mood, and playback
 
@@ -18,6 +19,9 @@
 **模仿 mmguo 风格 AI 电台体验，结合 AI DJ 对话、音乐推荐、播放器联动、歌词翻页和沉浸式视觉氛围。**
 
 作者注：使用 Codex + vibe-coding + sleep-coding
+
+参考与说明：本项目为基于 [kabaBZ/Claudio](https://github.com/kabaBZ/Claudio) 的学习向二次创作与改编。
+
 
 </div>
 
@@ -43,7 +47,7 @@
 
 ## 项目简介
 
-Claudio FM 是一个偏产品原型与体验设计导向的 AI 音乐项目。
+Codex-FM 是一个偏产品原型与体验设计导向的 AI 音乐项目。
 
 它把这些东西组合在了一起：
 
